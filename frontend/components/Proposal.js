@@ -9,6 +9,9 @@ import {
 } from 'rebass'
 import { Web3ReactProvider, useWeb3React } from '@web3-react/core'
 
+// TODO: replace with proper data
+import { SampleArticle, FullSample, PreviewSample } from './core/Article'
+
 import cryptoDoggyShopAbi from '../abis/CryptoDoggyShop.json'
 import cryptoDoggyAbi from '../abis/CryptoDoggy.json'
 
@@ -24,7 +27,7 @@ const ipfsLookup = async (hash, setProposalIPFSPath) => {
 }
 
 export default ({
-  proposal }) =>
+  proposal, previewOnly }) =>
   {
     const [proposalIPFSPath, setProposalIPFSPath] = useState()
     const [owned, setOwned] = useState()
@@ -76,19 +79,22 @@ export default ({
           boxShadow: '0 0 16px rgba(0, 0, 0, .25)',
         }}>
         <Image src={proposalIPFSPath} />
-        <Box px={2}>
-          <Heading as='h3'>
-            {name}
-          </Heading>
-          <Text fontSize={0}>
-            {description}
-          </Text>
-          <Text fontSize={0}>
-            {value && `Ξ${value}`}
-          </Text>
-          <Text fontSize={0}>
-            {owned && `Owned: ${owned}`}
-          </Text>
-        </Box>
+
+        { previewOnly ?
+          <Box px={2}>
+            <Heading as='h3'>
+              {name}
+            </Heading>
+            <Text fontSize={0}>
+              {description}
+            </Text>
+            <Text fontSize={0}>
+              {value && `Ξ${value}`}
+            </Text>
+            <Text fontSize={0}>
+              {owned && `Owned: ${owned}`}
+            </Text>
+          </Box> : 
+          <SampleArticle previewOnly={previewOnly} /> }
       </Card>
     </Box>}
