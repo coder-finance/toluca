@@ -61,14 +61,14 @@ function App(props) {
                   <Link
                     p={2}
                     fontWeight="bold"
-                    href="https://github.com/vercel/next.js/"
+                    href="/"
                     sx={{
                       fontWeight: "600",
                       color: "white",
                       textDecoration: "none",
                     }}
                   >
-                    Next.js
+                    coder.finance
                   </Link>
                   <Box mx="auto" />
 

@@ -1,4 +1,4 @@
-import NFT from '../../components/NFT'
+import Proposal from '../../components/Proposal'
 import dynamic from "next/dynamic";
 import BuyButton from '../../components/BuyButton';
 import { asset } from '../../constants';
@@ -7,19 +7,18 @@ const DynamicBuyButton = dynamic(() => import('../../components/BuyButton'), {
   ssr: false,
 });
 
-const NFTShowcase = ({ nft }) => (<div>
-  <NFT nft={nft} />
+const ProposalShowcase = ({ proposal }) => (<div>
+  <Proposal proposal={proposal} />
   <DynamicBuyButton variant='primary' mr={2}>Buy</DynamicBuyButton>
 </div>)
 
 // This function gets called at build time
 export async function getStaticProps() {
-  const nft = {
-    "name": "Ryu",
-    "description": "Hadouken",
-    "address": asset.address.ropsten,
-    "image": "QmVoVTXvJ42VKviRfJAW8bec3NQbzEz4KVo1CLNMwxvXJP", // "QmSgvgwxZGaBLqkGyWemEDqikCqU52XxsYLKtdy3vGZ8uq",
-    "meta": "QmVoVTXvJ42VKviRfJAW8bec3NQbzEz4KVo1CLNMwxvXJP meta" // "https://ipfs.infura.io/ipfs/QmWc6YHE815F8kExchG9kd2uSsv7ZF1iQNn23bt5iKC6K3/other"
+  const proposal = {
+    name: "godlydev",
+    description: "{}",
+    image: "QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B", // "QmSgvgwxZGaBLqkGyWemEDqikCqU52XxsYLKtdy3vGZ8uq",
+    meta: "QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B meta", // "https://ipfs.infura.io/ipfs/QmWc6YHE815F8kExchG9kd2uSsv7ZF1iQNn23bt5iKC6K3/other"
   }
 
   // Call an external API endpoint to get posts
@@ -30,7 +29,7 @@ export async function getStaticProps() {
   // // will receive `posts` as a prop at build time
   return {
     props: {
-      nft,
+      proposal,
     },
   }
 }
@@ -38,6 +37,7 @@ export async function getStaticProps() {
 export async function getStaticPaths() {
   return {
     paths: [
+      { params: { id: '0' } }, // See the "paths" section below
       { params: { id: '1' } } // See the "paths" section below
     ],
     fallback: true
@@ -45,4 +45,4 @@ export async function getStaticPaths() {
 }
 
 
-export default NFTShowcase
+export default ProposalShowcase
