@@ -18,20 +18,20 @@ const cryptoDoggyAddress = '0x4A6D387C002838c76b3fBD3112B2bF3e7b4e9228'
 // const connection = new providers.InfuraProvider('ropsten')
 const connection = new providers.JsonRpcProvider('http://localhost:7545')
 
-const ipfsLookup = async (hash, setNftPath) => {
-  // setNftPath( 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=2048&q=20')
-  setNftPath( `http://localhost:8080/ipfs/${hash}`);
+const ipfsLookup = async (hash, setProposalIPFSPath) => {
+  // setProposalIPFSPath( 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=2048&q=20')
+  setProposalIPFSPath( `http://localhost:8080/ipfs/${hash}`);
 }
 
 export default ({
-  nft }) =>
+  proposal }) =>
   {
-    const [nftPath, setNftPath] = useState()
+    const [proposalIPFSPath, setProposalIPFSPath] = useState()
     const [owned, setOwned] = useState()
     const [value, setValue] = useState()
     const { account, library } = useWeb3React()
 
-    if (!nft) return (<>Loading...</>)
+    if (!proposal) return (<>Loading...</>)
 
     const {
       name,
@@ -39,15 +39,15 @@ export default ({
       address,
       description,
       meta,
-    } = nft
+    } = proposal
 
     const ipfsLookupFn = async () => {
-      ipfsLookup(image, setNftPath);
+      ipfsLookup(image, setProposalIPFSPath);
     }
 
     useEffect(() => {
       ipfsLookupFn()
-    }, [nftPath])
+    }, [proposalIPFSPath])
 
     const cryptoDoggieFn = async () => {
       if (account) {
@@ -75,7 +75,7 @@ export default ({
           borderRadius: 2,
           boxShadow: '0 0 16px rgba(0, 0, 0, .25)',
         }}>
-        <Image src={nftPath} />
+        <Image src={proposalIPFSPath} />
         <Box px={2}>
           <Heading as='h3'>
             {name}

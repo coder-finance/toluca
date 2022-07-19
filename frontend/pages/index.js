@@ -13,7 +13,7 @@ function HomePage(props) {
         px: 3,
       }}
     >
-      {/* <Heading as="h1" children="NFT Gallery" mb={3} fontSize={[4, 5, 6]} /> */}
+      {/* <Heading as="h1" children="Proposal Gallery" mb={3} fontSize={[4, 5, 6]} /> */}
       <DynamicHomeGallery />
     </Box>
   );

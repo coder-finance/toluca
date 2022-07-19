@@ -1,7 +1,7 @@
 import { Heading, Text, Link, Box } from "rebass";
 import { Flex, Box as FlexBox } from "reflexbox";
 import useSWR from "swr";
-import NFT from "../components/NFT";
+import Proposal from "../components/Proposal";
 
 
 const gallery = [
@@ -47,7 +47,7 @@ const HomeGallery = (props) => {
       {gallery &&
         gallery.map((n) => (
           <FlexBox width={[1, 1 / 2]} p={3}>
-            <NFT nft={n} />
+            <Proposal proposal={n} />
           </FlexBox>
         ))}
     </Flex>
