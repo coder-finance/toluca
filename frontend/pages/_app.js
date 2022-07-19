@@ -6,7 +6,7 @@ import { ThemeProvider } from "emotion-theming";
 import theme from "@rebass/preset";
 import { useEagerConnect } from '../contexts';
 
-// import './App.css';
+import './App.css';
 import { injected } from '../connectors'
 import Connect from '../components/Connect'
 
