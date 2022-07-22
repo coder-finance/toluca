@@ -11,3 +11,16 @@ GAS_REPORT=true npx hardhat test
 npx hardhat node
 npx hardhat run scripts/deploy.js
 ```
+
+### Get a flattened version
+
+```
+ ./node_modules/truffle-flattener/index.js ./contracts/CoderDAO.sol > ./CoderDAOFlattened.sol
+ ```
+
+ ### References
+
+ #### UUPS contracts
+ 
+  - https://www.youtube.com/watch?v=kWUDTZhxKZI
+  - https://blog.logrocket.com/using-uups-proxy-pattern-upgrade-smart-contracts/
