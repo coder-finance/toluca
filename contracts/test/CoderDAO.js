@@ -6,12 +6,14 @@ describe("CoderDAO", function () {
 
   before('get factories', async function () {
     this.dao = await ethers.getContractFactory("CoderDAO");
-    this.dao = await ethers.getContractFactory("CoderDAOToken");
+    this.token = await ethers.getContractFactory("CoderDAOToken");
   })
 
   describe("Deployment", function () {
     it("Should set the right name", async function () {
-      const instance = await upgrades.deployProxy(this.dao, ['0x0']);
+      const token_instance = await upgrades.deployProxy(this.token);
+      await token_instance.deployed();
+      const instance = await upgrades.deployProxy(this.dao, [token_instance.address]);
       await instance.deployed();
 
       expect(await instance.name()).to.be.equal(name);

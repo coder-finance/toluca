@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettin
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorTimelockCompoundUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -19,7 +18,6 @@ contract CoderDAO is
     GovernorCountingSimpleUpgradeable,
     GovernorVotesUpgradeable,
     GovernorVotesQuorumFractionUpgradeable,
-    GovernorTimelockCompoundUpgradeable,
     OwnableUpgradeable,
     UUPSUpgradeable
 {
@@ -28,10 +26,7 @@ contract CoderDAO is
         _disableInitializers();
     }
 
-    function initialize(
-        IVotesUpgradeable _token,
-        ICompoundTimelockUpgradeable _timelock
-    ) public initializer {
+    function initialize(IVotesUpgradeable _token) public initializer {
         __Governor_init("CoderDAO");
         __GovernorSettings_init(
             1, /* 1 block */
@@ -41,7 +36,6 @@ contract CoderDAO is
         __GovernorCountingSimple_init();
         __GovernorVotes_init(_token);
         __GovernorVotesQuorumFraction_init(4);
-        __GovernorTimelockCompound_init(_timelock);
         __Ownable_init();
         __UUPSUpgradeable_init();
     }
@@ -81,28 +75,6 @@ contract CoderDAO is
         return super.quorum(blockNumber);
     }
 
-    function state(uint256 proposalId)
-        public
-        view
-        override(GovernorUpgradeable, GovernorTimelockCompoundUpgradeable)
-        returns (ProposalState)
-    {
-        return super.state(proposalId);
-    }
-
-    function propose(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        string memory description
-    )
-        public
-        override(GovernorUpgradeable, IGovernorUpgradeable)
-        returns (uint256)
-    {
-        return super.propose(targets, values, calldatas, description);
-    }
-
     function proposalThreshold()
         public
         view
@@ -110,49 +82,5 @@ contract CoderDAO is
         returns (uint256)
     {
         return super.proposalThreshold();
-    }
-
-    function _execute(
-        uint256 proposalId,
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        bytes32 descriptionHash
-    )
-        internal
-        override(GovernorUpgradeable, GovernorTimelockCompoundUpgradeable)
-    {
-        super._execute(proposalId, targets, values, calldatas, descriptionHash);
-    }
-
-    function _cancel(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        bytes32 descriptionHash
-    )
-        internal
-        override(GovernorUpgradeable, GovernorTimelockCompoundUpgradeable)
-        returns (uint256)
-    {
-        return super._cancel(targets, values, calldatas, descriptionHash);
-    }
-
-    function _executor()
-        internal
-        view
-        override(GovernorUpgradeable, GovernorTimelockCompoundUpgradeable)
-        returns (address)
-    {
-        return super._executor();
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(GovernorUpgradeable, GovernorTimelockCompoundUpgradeable)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
     }
 }
