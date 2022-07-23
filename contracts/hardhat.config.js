@@ -1,6 +1,19 @@
 /** @type import('hardhat/config').HardhatUserConfig */
 require('@nomiclabs/hardhat-ethers')
-require('@nomiclabs/hardhat-waffle')
+require("@nomiclabs/hardhat-truffle5");
+require('@openzeppelin/hardhat-upgrades');
+require("@nomicfoundation/hardhat-toolbox");
+require("solidity-coverage");
+
+// This is a sample Buidler task. To learn how to create your own go to
+// https://buidler.dev/guides/create-task.html
+task("accounts", "Prints the list of accounts", async () => {
+  const accounts = await ethers.getSigners();
+
+  for (const account of accounts) {
+    console.log(await account.getAddress());
+  }
+});
 
 module.exports = {
   solidity: "0.8.9",
@@ -20,6 +33,16 @@ module.exports = {
       timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
       skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
     },
+    development: {
+      url: "http://127.0.0.1:7545",
+      port: 7545,
+      network_id: "101"
+    },
+    test: {
+      url: "http://127.0.0.1:7545",
+      port: 7545,
+      network_id: "*"
+    },
     hardhat: {
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
@@ -29,6 +52,9 @@ module.exports = {
     }
   },
   paths: {
-    sources: './contracts'
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./cache",
+    artifacts: "./artifacts"
   },
 };
