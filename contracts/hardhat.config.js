@@ -1,19 +1,23 @@
-require("@nomicfoundation/hardhat-toolbox");
-require("solidity-coverage");
+/* eslint-disable import/no-extraneous-dependencies */
+/* global ethers */
+require('dotenv-safe').config();
+require('@nomicfoundation/hardhat-toolbox');
+require('solidity-coverage');
+require('@nomiclabs/hardhat-truffle5');
+require('@nomiclabs/hardhat-ethers');
+require('@openzeppelin/hardhat-upgrades');
+
+const deployerKeyRopsten = process.env.DEPLOYER_PRIVATE_KEY_ROPSTEN;
 
 // This is a sample Buidler task. To learn how to create your own go to
 // https://buidler.dev/guides/create-task.html
-task("accounts", "Prints the list of accounts", async () => {
+task('accounts', 'Prints the list of accounts', async () => {
   const accounts = await ethers.getSigners();
 
   for (const account of accounts) {
     console.log(await account.getAddress());
   }
 });
-
-require("@nomiclabs/hardhat-truffle5");
-require("@nomiclabs/hardhat-ethers");
-require('@openzeppelin/hardhat-upgrades');
 
 // You have to export an object to set up your config
 // This object can have the following optional entries:
@@ -22,7 +26,7 @@ require('@openzeppelin/hardhat-upgrades');
 module.exports = {
   // This is a sample solc configuration that specifies which version of solc to use
   solidity: {
-    version: "0.8.9",
+    version: '0.8.9',
     settings: {
       optimizer: {
         enabled: true,
@@ -32,24 +36,28 @@ module.exports = {
   },
 
   networks: {
+    ropsten: {
+      url: process.env.NODE_URL_ROPSTEN,
+      accounts: [deployerKeyRopsten],
+    },
     hardhat: {
     },
     development: {
-      url: "http://127.0.0.1:7545",
+      url: 'http://127.0.0.1:7545',
       port: 7545,
-      network_id: "101"
+      network_id: '101'
     },
     test: {
-      url: "http://127.0.0.1:7545",
+      url: 'http://127.0.0.1:7545',
       port: 7545,
-      network_id: "*"
+      network_id: '*'
     },
   },
   paths: {
-    sources: "./contracts",
-    tests: "./test",
-    cache: "./cache",
-    artifacts: "./artifacts"
+    sources: './contracts',
+    tests: './test',
+    cache: './cache',
+    artifacts: './artifacts'
   },
   allowUnlimitedContractSize: true
 };
