@@ -7,18 +7,16 @@
 const hre = require("hardhat");
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-  const unlockTime = currentTimestampInSeconds + ONE_YEAR_IN_SECS;
+  const DAOToken = await hre.ethers.getContractFactory("CoderDAOToken");
+  const DAO = await hre.ethers.getContractFactory("CoderDAO");
 
-  const lockedAmount = hre.ethers.utils.parseEther("1");
+  const daoTokenInstance = await upgrades.deployProxy(DAOToken, {kind: 'uups'});
+  await daoTokenInstance.deployed();
 
-  const Lock = await hre.ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+  const daoInstance = await upgrades.deployProxy(DAO, [daoTokenInstance.address], {kind: 'uups'});
+  await daoInstance.deployed();
 
-  await lock.deployed();
-
-  console.log("Lock with 1 ETH deployed to:", lock.address);
+  console.log("DAO deployed to:", daoInstance.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
