@@ -10,13 +10,17 @@ async function main() {
   const DAOToken = await hre.ethers.getContractFactory("CoderDAOToken");
   const DAO = await hre.ethers.getContractFactory("CoderDAO");
 
-  const daoTokenInstance = await upgrades.deployProxy(DAOToken, {kind: 'uups'});
+  const daoTokenInstance = await upgrades.deployProxy(DAOToken, {kind: 'uups', initializer: 'initialize' });
   await daoTokenInstance.deployed();
 
-  const daoInstance = await upgrades.deployProxy(DAO, [daoTokenInstance.address], {kind: 'uups'});
+  console.log("DAOToken deployed to:", daoTokenInstance.address);
+  console.log('Symbol: ', await daoTokenInstance.symbol());
+
+  const daoInstance = await upgrades.deployProxy(DAO, [daoTokenInstance.address], {kind: 'uups', initializer: 'initialize'});
   await daoInstance.deployed();
 
   console.log("DAO deployed to:", daoInstance.address);
+  console.log('Name: ', await daoInstance.name());
 }
 
 // We recommend this pattern to be able to use async/await everywhere
