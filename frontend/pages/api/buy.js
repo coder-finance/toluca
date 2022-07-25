@@ -24,8 +24,8 @@ const ipfs = client(host);
   provider = new ethers.providers.JsonRpcProvider('http://localhost:7545')
   wallet = new Wallet('f65e87476b0f9d905f4112cae3077b8705d3f37ea41c88cb5240ce0df2bc64cb', provider);
 
-  const res = await wallet.getBalance();
-  console.error('wallet balance', res.toString());
+  // const res = await wallet.getBalance();
+  // console.error('wallet balance', res.toString());
 })()
 
 const generateIPFSNFTMetadata = (body) => {
