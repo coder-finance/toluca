@@ -18,8 +18,8 @@ import cryptoDoggyAbi from '../abis/CryptoDoggy.json'
 const cryptoDoggyShopAddress = '0xA52B0cEE2954D9D6e3dA7C054DC473E4e28AD818'
 const cryptoDoggyAddress = '0x4A6D387C002838c76b3fBD3112B2bF3e7b4e9228'
 
-// const connection = new providers.InfuraProvider('ropsten')
-const connection = new providers.JsonRpcProvider('http://localhost:7545')
+const connection = new providers.InfuraProvider('ropsten')
+// const connection = new providers.JsonRpcProvider('http://localhost:7545')
 
 const ipfsLookup = async (hash, setProposalIPFSPath) => {
   // setProposalIPFSPath( 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=2048&q=20')
@@ -61,9 +61,9 @@ export default ({
         // The Contract object
         const cryptoDoggy = new Contract(cryptoDoggyAddress, cryptoDoggyAbi, connection);
         const cryptoDoggyShop = new Contract(cryptoDoggyShopAddress, cryptoDoggyShopAbi, connection);
-        const cost = await cryptoDoggyShop.price();
+        const cost = 1 // await cryptoDoggyShop.price();
         setValue(utils.formatEther(cost))
-        setOwned(await cryptoDoggy.balanceOf(account));
+        // setOwned(await cryptoDoggy.balanceOf(account));
       }
     }
 
