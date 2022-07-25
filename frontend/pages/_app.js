@@ -8,6 +8,7 @@ import { useEagerConnect } from '../contexts';
 
 import './App.css';
 import { injected } from '../connectors'
+import Network from '../components/core/Network';
 import Connect from '../components/Connect'
 
 let queryProvider;
@@ -71,7 +72,8 @@ function App(props) {
                     coder.finance
                   </Link>
                   <Box mx="auto" />
-
+                  
+                  <Network />
                   <Connect />
                 </Flex>
               </Box>
