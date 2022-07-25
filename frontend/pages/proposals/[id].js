@@ -1,15 +1,13 @@
 import Proposal from '../../components/Proposal'
 import dynamic from "next/dynamic";
-import BuyButton from '../../components/BuyButton';
-import { asset } from '../../constants';
 
-const DynamicBuyButton = dynamic(() => import('../../components/BuyButton'), {
+const DynamicVoteButton = dynamic(() => import('../../components/VoteButton'), {
   ssr: false,
 });
 
 const ProposalShowcase = ({ proposal }) => (<div>
   <Proposal proposal={proposal} />
-  <DynamicBuyButton variant='primary' mr={2}>Buy</DynamicBuyButton>
+  <DynamicVoteButton variant='primary' mr={2}>Vote</DynamicVoteButton>
 </div>)
 
 // This function gets called at build time

@@ -25,9 +25,9 @@ export default props => {
   }
 
   return account ? (<Text
-              fontSize={[ 3, 4, 5 ]}
+              fontSize={1}
               fontWeight='bold'
-              color='primary'>
+              color='white'>
               {account}
             </Text>) : (<Button
       {...props}
