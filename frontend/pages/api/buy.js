@@ -1,31 +1,22 @@
 import { ethers, Wallet, Contract, utils } from 'ethers'
-import { shop, asset } from '../../constants'
-import cryptoDoggyAbi from '../../abis/CryptoDoggy.json'
+import { shop, asset, ipfs } from '../../constants'
+import coderDAOAbi from '../../abis/CoderDAO.json'
 
-const shopAddress = shop.address.ropsten
 const assetAddress = asset.address.ropsten
-const cryptoDoggyAddress = '0x7cCeF19091987024E322E929c71bb2d54e59663d' // asset.address.ropsten //'0x841890e5311E9F848893102Aa1fb7ec2DC0A57d0'
 
 const { create: client, globSource, CID } = require('ipfs-http-client');
-
-const host = 'http://localhost:5001'
 
 let fileContent
 let provider
 let wallet
 
-const ipfs = client(host);
+const ipfs = client(ipfs.host);
 
 (async function() {
   const id = await ipfs.id()
   console.info(`Daemon active. ID: ${id.id}`);
 
-  // provider = new ethers.providers.InfuraProvider('ropsten', '583aa3fd29394208bee43d6d211c0762');
-  provider = new ethers.providers.JsonRpcProvider('http://localhost:7545')
-  wallet = new Wallet('f65e87476b0f9d905f4112cae3077b8705d3f37ea41c88cb5240ce0df2bc64cb', provider);
-
-  // const res = await wallet.getBalance();
-  // console.error('wallet balance', res.toString());
+  provider = new ethers.providers.InfuraProvider('ropsten', '583aa3fd29394208bee43d6d211c0762');
 })()
 
 const generateIPFSNFTMetadata = (body) => {
@@ -59,7 +50,7 @@ const ipfsUpload = async (metadata) => {
 
 console.error(8888, assetAddress);
 const awardItem = async (recipient, price, assetHash, metadataHash) => {
-  const cryptoDoggy = new Contract(assetAddress, cryptoDoggyAbi, wallet);
+  const cryptoDoggy = new Contract(assetAddress, coderDAOAbi, wallet);
   const gasPrice = await provider.getGasPrice();
 
   console.error('gasPrice:', gasPrice.toString());

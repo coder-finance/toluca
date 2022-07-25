@@ -5,9 +5,9 @@ import { useWeb3React } from '@web3-react/core'
 import { checkChainSupported } from '../../utils';
 
 export default () => {
-  const { chainId } = useWeb3React()
+  const { account, chainId } = useWeb3React()
 
-  return (<Box
+  return (account ? <Box
     sx={{
       display: 'inline-block',
       color: 'white',
@@ -17,5 +17,5 @@ export default () => {
       borderRadius: 10,
     }} style={{ marginRight: '8px' }}>
     {checkChainSupported(chainId) ? 'Ropsten' : 'Wrong Network'}
-  </Box>)
+  </Box> : null)
 }

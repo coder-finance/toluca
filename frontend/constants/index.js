@@ -25,6 +25,10 @@ export const shop = {
   }
 }
 
+export const ipfs = {
+  host: 'http://localhost:5001'
+}
+
 export default gallery
 
 export const NETWORK_ID_SUPPORTED = [3];

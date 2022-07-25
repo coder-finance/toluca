@@ -12,17 +12,13 @@ import { Web3ReactProvider, useWeb3React } from '@web3-react/core'
 // TODO: replace with proper data
 import { SampleArticle, FullSample, PreviewSample } from './core/Article'
 
-import cryptoDoggyShopAbi from '../abis/CryptoDoggyShop.json'
-import cryptoDoggyAbi from '../abis/CryptoDoggy.json'
+import cryptoDoggyAbi from '../abis/CoderDAO.json'
 
-const cryptoDoggyShopAddress = '0xA52B0cEE2954D9D6e3dA7C054DC473E4e28AD818'
-const cryptoDoggyAddress = '0x4A6D387C002838c76b3fBD3112B2bF3e7b4e9228'
+const coderDaoAddress = '0x346787C77d6720db91Ce140120457e20Fdd4D02c'
 
 const connection = new providers.InfuraProvider('ropsten')
-// const connection = new providers.JsonRpcProvider('http://localhost:7545')
 
 const ipfsLookup = async (hash, setProposalIPFSPath) => {
-  // setProposalIPFSPath( 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=2048&q=20')
   setProposalIPFSPath( `http://localhost:8080/ipfs/${hash}`);
 }
 
@@ -52,23 +48,21 @@ export default ({
       ipfsLookupFn()
     }, [proposalIPFSPath])
 
-    const cryptoDoggieFn = async () => {
+    const ProposalRetrievalFn = async () => {
       if (account) {
         console.error('blah')
 
         const lib = await library
 
         // The Contract object
-        const cryptoDoggy = new Contract(cryptoDoggyAddress, cryptoDoggyAbi, connection);
-        const cryptoDoggyShop = new Contract(cryptoDoggyShopAddress, cryptoDoggyShopAbi, connection);
-        const cost = 1 // await cryptoDoggyShop.price();
-        setValue(utils.formatEther(cost))
-        // setOwned(await cryptoDoggy.balanceOf(account));
+        const coderDao = new Contract(coderDaoAddress, cryptoDoggyAbi, connection);
+        const daoName = await coderDao.name();
+        setValue(daoName);
       }
     }
 
     useEffect(() => {
-      cryptoDoggieFn()
+      ProposalRetrievalFn()
     }, [account])
 
     return <Box>
@@ -78,7 +72,7 @@ export default ({
           borderRadius: 2,
           boxShadow: '0 0 16px rgba(0, 0, 0, .25)',
         }}>
-        <Image src={proposalIPFSPath} />
+        <Image src={proposalIPFSPath} style={{ maxHeight: '500px' }}/>
 
         { previewOnly ?
           <Box px={2}>

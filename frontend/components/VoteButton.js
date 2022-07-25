@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Button } from 'rebass'
 import { useWeb3React } from '@web3-react/core'
 import { Contract, providers, utils } from 'ethers'
-import cryptoDoggyShopAbi from '../abis/CryptoDoggyShop.json'
+import coderDAOAbi from '../abis/CoderDAO.json'
 
 const cryptoDoggyShopAddress = '0x02b9bd2cAc9d26eD6B8dd8E409C07451bB893143'
 const connection = new providers.InfuraProvider('ropsten', '2f23d44442364325a40ed89eb1b221dc')
@@ -43,14 +43,12 @@ export default props => {
 
     const payload = { ...transaction , recipient: account, price: cost }
 
-    const response = await fetch('/api/buy', {
+    const response = await fetch('/api/propose', {
       method: 'POST',
       body: JSON.stringify(payload),
     })
 
     const txnResult = await response.json()
-    console.error(9887, txnResult)
-
   }
 
   useEffect(txnFetchFn, [transaction])
@@ -64,7 +62,7 @@ export default props => {
     console.error('on buy', signer, txCount)
 
     // The Contract object
-    const cryptoDoggyShop = new Contract(cryptoDoggyShopAddress, cryptoDoggyShopAbi, lib.getSigner());
+    const cryptoDoggyShop = new Contract(cryptoDoggyShopAddress, coderDAOAbi, lib.getSigner());
     const retrievedCost = await cryptoDoggyShop.price();
     setCost(retrievedCost.toString());
     console.error(7123, retrievedCost.toString())
