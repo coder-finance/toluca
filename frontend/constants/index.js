@@ -24,4 +24,7 @@ export const shop = {
     ropsten: '0x02b9bd2cAc9d26eD6B8dd8E409C07451bB893143'
   }
 }
+
 export default gallery
+
+export const NETWORK_ID_SUPPORTED = [3];
