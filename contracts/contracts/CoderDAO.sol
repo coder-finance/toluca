@@ -85,8 +85,3 @@ contract CoderDAO is
     }
 }
 
-contract CoderDAOV2 is CoderDAO {
-    function version() public view virtual override returns (string memory) {
-        return "2";
-    }
-}

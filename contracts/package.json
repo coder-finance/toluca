@@ -19,6 +19,7 @@
     "@openzeppelin/contracts": "^4.7.1",
     "@openzeppelin/contracts-upgradeable": "^4.7.1",
     "@openzeppelin/hardhat-upgrades": "^1.19.0",
+    "@openzeppelin/test-helpers": "^0.5.15",
     "@openzeppelin/truffle-upgrades": "^1.15.0",
     "dotenv-safe": "^8.2.0",
     "eslint": "^8.20.0",
