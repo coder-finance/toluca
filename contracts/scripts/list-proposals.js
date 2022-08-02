@@ -8,7 +8,9 @@
 // global scope, and execute the script.
 
 
-const daoAddress = "0x346787C77d6720db91Ce140120457e20Fdd4D02c";
+require('dotenv-safe').config();
+
+const daoAddress = process.env.ADDRESS_DAO;
 
 const hre = require('hardhat');
 
