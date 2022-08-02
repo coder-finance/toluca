@@ -8,13 +8,12 @@ import {
   Text
 } from 'rebass'
 import { Web3ReactProvider, useWeb3React } from '@web3-react/core'
+import { daoAddress } from '../constants';
 
 // TODO: replace with proper data
 import { SampleArticle, FullSample, PreviewSample } from './core/Article'
 
 import cryptoDoggyAbi from '../abis/CoderDAO.json'
-
-const coderDaoAddress = '0x346787C77d6720db91Ce140120457e20Fdd4D02c'
 
 const connection = new providers.InfuraProvider('ropsten')
 
@@ -55,7 +54,7 @@ export default ({
         const lib = await library
 
         // The Contract object
-        const coderDao = new Contract(coderDaoAddress, cryptoDoggyAbi, connection);
+        const coderDao = new Contract(daoAddress, cryptoDoggyAbi, connection);
         const daoName = await coderDao.name();
         setValue(daoName);
       }
