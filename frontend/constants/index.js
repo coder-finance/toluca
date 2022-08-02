@@ -29,6 +29,17 @@ export const ipfs = {
   host: 'http://localhost:5001'
 }
 
+export const proposalStub = {
+  title: "Proposal #1: Give grant to team",
+  behaviour: {
+    action: "bounty",
+    amount: "1",
+  },
+}
+
 export default gallery
 
 export const NETWORK_ID_SUPPORTED = [3];
+
+export const daoTokenAddress = "0x39C1b593eDCFE71bB553196E42a93399dC72B17C";
+export const daoAddress = "0x346787C77d6720db91Ce140120457e20Fdd4D02c";

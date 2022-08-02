@@ -1,4 +1,4 @@
-import { Heading, Text, Link, Box } from "rebass";
+import { Heading, Text, Link, Button } from "rebass";
 import { Flex, Box as FlexBox } from "reflexbox";
 import useSWR from "swr";
 import Proposal from "../components/Proposal";
