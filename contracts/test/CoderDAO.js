@@ -54,8 +54,9 @@ describe("CoderDAO", function () {
           [transferCalldata],
           "Proposal #1: Give grant to team",
         );
-
+      console.log(proposalTx)
       const proposalReceipt = await proposalTx.wait(1);
+      await network.provider.send('evm_mine');
       const proposalId = proposalReceipt.events[0].args.proposalId;
       console.log(202, proposalReceipt.events);
       let proposalState = await instance.state(proposalId);
@@ -74,7 +75,7 @@ describe("CoderDAO", function () {
       let voteReceipt1 = await instance.connect(voter1).castVote(proposalId, 1);
       console.log(202, voteReceipt1.events);
       const votes = await instance.proposalVotes(proposalId);
-      assert(votes.forVotes == '1', "Vote count mismatch");
+      assert.equal(votes.forVotes, '1');
       
       // Run proposal
       /*await instance.queue(
