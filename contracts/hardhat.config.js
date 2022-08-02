@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* global ethers */
-require('dotenv-safe').config();
+require('dotenv-safe').config({ path: __dirname + '/.env' });
 require('@nomicfoundation/hardhat-toolbox');
 require('solidity-coverage');
 require('@nomiclabs/hardhat-truffle5');
