@@ -3,6 +3,40 @@ const assert = require('assert');
 const { GovernorHelper } = require('./helpers/governance');
 const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
+/**
+module.exports = {
+    Enum,
+  ProposalState: Enum(
+      'Pending',
+    'Active',
+    'Canceled',
+    'Defeated',
+    'Succeeded',
+    'Queued',
+    'Expired',
+    'Executed',
+  ),
+  VoteType: Enum(
+      'Against',
+    'For',
+    'Abstain',
+  ),
+};
+**/
+
+
+async function moveBlocks(amount) {
+    console.log("Moving blocks...");
+    for (let index = 0; index < amount; index++) {
+        await network.provider.request({
+            method: "evm_mine",
+            params: [],
+          });
+      }
+    console.log(`Moved ${amount} blocks`);
+}
+
+
 describe("CoderDAO", function () {
   const name = 'CoderDAO';
 
@@ -21,6 +55,7 @@ describe("CoderDAO", function () {
       assert(await instance.name() === name);
       
 
+      const VOTING_DELAY = 45818;
       const value = web3.utils.toWei('1');
       await web3.eth.sendTransaction({ from: owner.address, to: instance.address, value });
       
@@ -31,7 +66,16 @@ describe("CoderDAO", function () {
       const startBalance = await team.getBalance();
       assert.equal(startBalance.toString(), '10000000000000000000000');
 
-      await token_instance.connect(voter1).delegate(voter1.address);
+      // token holders have some voting power 
+      await token_instance.mint(voter1.address, web3.utils.toWei('5'));
+      // but to excersise it they need to delegate it
+      assert.equal(await token_instance.delegates(voter1.address), 0);
+      let delegateTx = await token_instance.connect(voter1).delegate(voter1.address);
+      let delegateReceipt = await delegateTx.wait();
+      assert.equal(delegateReceipt.events[0].args['delegator'], voter1.address);
+      assert.equal(delegateReceipt.events[0].args['toDelegate'], voter1.address);
+      assert.equal(delegateReceipt.events[0].args['fromDelegate'], '0x0000000000000000000000000000000000000000');
+      console.log("Delegate", delegateReceipt.events);
 
       //await helper.delegate({ token: token_instance, to: voter2.address, value: web3.utils.toWei('7') }, { from: owner.address });
       //await helper.delegate({ token: token_instance, to: voter3.address, value: web3.utils.toWei('5') }, { from: owner.address });
@@ -66,30 +110,31 @@ describe("CoderDAO", function () {
       assert(await instance.hasVoted(proposalId, owner.address) === false);
       assert(await instance.hasVoted(proposalId, voter1.address) === false);
       //assert(await instance.hasVoted(proposal.id, voter2.address) === false);
-      console.log(101, instance.address, owner.address, team.address);
-      
       assert.equal(await web3.eth.getBalance(instance.address), value);
-      console.log(102)
       assert.equal((await team.getBalance()).toString(), startBalance.toString());
 
-      let voteReceipt1 = await instance.connect(voter1).castVote(proposalId, 1);
-      console.log(202, voteReceipt1.events);
+      let voteTx = await instance.connect(voter1).castVote(proposalId, 1);
+      let voteReceipt1 = await voteTx.wait(1);
+      await network.provider.send('evm_mine');
       const votes = await instance.proposalVotes(proposalId);
-      assert.equal(votes.forVotes, '1');
+      console.log(301, votes);
+      assert.equal(votes.forVotes, web3.utils.toWei('5'));
+
+      proposalState = await instance.state(proposalId);
+      assert.equal(proposalState, '1');      
       
-      // Run proposal
-      /*await instance.queue(
-          [token_instance.address],
-          [0],
-          [transferCalldata],
-          descriptionHash,
-        );*/
+      const descriptionHash = ethers.utils.id("Proposal #1: Give grant to team");
+      await moveBlocks(VOTING_DELAY + 1);
       
+      // Run proposal      
+      proposalState = await instance.state(proposalId);
+      assert.equal(proposalState, '4');      
+ 
       await instance.execute(
           [token_instance.address],
           [0],
           [transferCalldata],
-          "Proposal #1: Give grant to team",
+          descriptionHash
         );
       
       assert.equal(await web3.eth.getBalance(instance.address).toString(), '0');
