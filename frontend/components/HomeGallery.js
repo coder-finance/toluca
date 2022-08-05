@@ -1,58 +1,54 @@
-import { Heading, Text, Link, Button } from "rebass";
-import { Flex, Box as FlexBox } from "reflexbox";
-import useSWR from "swr";
-import Proposal from "../components/Proposal";
+import { useState, useEffect } from 'react';
+import {
+  Heading, Text, Link, Button
+} from 'rebass';
+import { Flex, Box as FlexBox } from 'reflexbox';
+import { useWeb3React } from '@web3-react/core';
+import { Contract } from 'ethers';
 
+import Proposal from './Proposal';
+import { daoAddress } from '../constants';
+import coderDAOAbi from '../abis/CoderDAO.json';
 
-const gallery = [
-  {
-    name: "Running any NPM package in the browser locally",
-    description: "JavaScript has never had any official solution for distributing packages, and every web platform (Rails, Django etc) has their own idea of how to structure and package JavaScript. In the last few years NPM has started becoming the canonical way of distribution, with Webpack as the build system, but there’s no way to load NPM packages in the browser without a server-side component.",
-    image: "QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B", // "QmSgvgwxZGaBLqkGyWemEDqikCqU52XxsYLKtdy3vGZ8uq",
-    meta: "QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B meta", // "https://ipfs.infura.io/ipfs/QmWc6YHE815F8kExchG9kd2uSsv7ZF1iQNn23bt5iKC6K3/other"
-  },
-  {
-    name: "Eating donuts is good for your health D'OH",
-    description: "This is a good example of how decoupling two system (the module system and the dependency system) gives us greater flexibility even though we’re always going to use them together. By decoupling them we have clearly defined what the module system needs to function. After careful consideration we found a way to cache this in the most performant way.",
-    image: "QmdwDWXtJS5QvTXy7QoGAAUvTFY4Hhpo2nxmeU2v1MVXLP",
-    meta: "https://ipfs.infura.io/ipfs/QmdwDWXtJS5QvTXy7QoGAAUvTFY4Hhpo2nxmeU2v1MVXLP/other"
-  },
-  // {
-  //   name: "godlydev",
-  //   description: "{}",
-  //   image: "QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B", // "QmSgvgwxZGaBLqkGyWemEDqikCqU52XxsYLKtdy3vGZ8uq",
-  //   meta: "QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B meta", // "https://ipfs.infura.io/ipfs/QmWc6YHE815F8kExchG9kd2uSsv7ZF1iQNn23bt5iKC6K3/other"
-  // },
-  // {
-  //   name: "hk",
-  //   description: "hong kong night time",
-  //   image: "QmdwDWXtJS5QvTXy7QoGAAUvTFY4Hhpo2nxmeU2v1MVXLP",
-  //   meta: "https://ipfs.infura.io/ipfs/QmdwDWXtJS5QvTXy7QoGAAUvTFY4Hhpo2nxmeU2v1MVXLP/other"
-  // },
-];
+function HomeGallery(props) {
+  const { account, library } = useWeb3React();
+  const [proposals, setProposals] = useState([]);
 
-const HomeGallery = (props) => {
   const fetcher = async () => {
-    return gallery;
+    if (!account) return;
+
+    const lib = await library;
+
+    // get from events the proposal details
+    const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
+    const filters = await coderDaoContract.filters.ProposalCreated();
+    const logs = await coderDaoContract.queryFilter(filters, 0, 'latest');
+    const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
+
+    // latest state of proposal
+    // const proposalInfo = await coderDaoContract.state(events[0].args.proposalId)
+
+    setProposals(events.map((e) => ({
+      id: e.args.proposalId.toString(), description: e.args.description, title: e.args.description, image: 'QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B', meta: `${e.args.proposalId.toString()} meta`
+    })));
   };
 
-  const { data, error } = useSWR("/api/gallery", fetcher);
-
-  if (!gallery) {
-    return null;
-  }
+  useEffect(() => {
+    fetcher();
+  }, [account]);
 
   return (
     <Flex flexWrap="wrap">
-      {gallery &&
-        gallery.map((n, i) => (
-          <FlexBox width={[1, 1 / 2]} p={3}>
+      {proposals
+        && proposals.map((n, i) => (
+          <FlexBox key={i} width={[1, 1 / 2]} p={3}>
             <Link href={`/proposals/${i}`}>
-            <Proposal proposal={n} previewOnly={true} /></Link>
+              <Proposal proposal={n} previewOnly />
+            </Link>
           </FlexBox>
         ))}
     </Flex>
   );
-};
+}
 
 export default HomeGallery;
