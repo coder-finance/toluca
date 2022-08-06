@@ -26,7 +26,7 @@ export const shop = {
 };
 
 export const ipfs = {
-  host: 'http://localhost:5001'
+  host: 'http://127.0.0.1:5001'
 };
 
 export const proposalStub = {
