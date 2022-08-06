@@ -35,20 +35,35 @@ export default function () {
   const {
     register, handleSubmit, watch, formState: { errors }
   } = useForm();
-  const [proposalIPFSPath, setProposalIPFSPath] = useState();
   const [value, setValue] = useState();
-  const [markdownBody, setMarkdownBody] = useState('# h1');
+  const [submittedProposal, setSubmittedProposal] = useState(null);
+  const [markdownBody, setMarkdownBody] = useState('# Proposal Title');
   const { account, library } = useWeb3React();
 
-  const onSubmit = (data) => console.log(data);
-
-  const ipfsLookupFn = async () => {
-    ipfsLookup('QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B', setProposalIPFSPath);
+  const txnFetchFn = async (data) => {
+    if (!account) {
+      console.error('account is undefined, returning...');
+      return;
+    }
+  
+    const payload = { ...data, initiator: account };
+  
+    const response = await fetch('/api/propose', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  
+    const txnResult = await response.json();
+    setSubmittedProposal(txnResult);
   };
 
-  useEffect(() => {
-    ipfsLookupFn();
-  }, [proposalIPFSPath]);
+  const onSubmit = (formData) => {
+    if (markdownBody.length <= 0) return;
+
+    const data = { ...formData, body: markdownBody }
+    console.log(data)
+    txnFetchFn(data)
+  };
 
   const ProposalRetrievalFn = async () => {
     if (account) {
@@ -64,6 +79,21 @@ export default function () {
   useEffect(() => {
     ProposalRetrievalFn();
   }, [account]);
+
+  if (submittedProposal !== null) {
+    return (
+      <Box>
+        <Card
+          sx={{
+            p: 1,
+            borderRadius: 2,
+            boxShadow: '0 0 16px rgba(0, 0, 0, .25)',
+          }}
+        >
+          Proposal submitted successfully: {submittedProposal.ipfs}
+        </Card>
+      </Box>);
+  }
 
   return (
     <Box>
@@ -86,14 +116,26 @@ export default function () {
                 name='title'
                 {...register('title', { required: true })} 
               />
-              {errors.exampleRequired && <span>This field is required</span>}
+              {errors.title && <span>Title is required</span>}
+            </Box>
+            <Box width={1/2} px={2}>
+              <Label htmlFor='bounty'>Bounty (Ξ)</Label>
+              <Input
+                id='bounty'
+                name='bounty'
+                type='number'
+                min='0'
+                max='5000'
+                {...register('bounty', { required: true })} 
+              />
+              {errors.bounty && <span>Bounty is required</span>}
             </Box>
             <Box width={1/2} px={2}>
               <Label htmlFor='category'>Category</Label>
               <Select
                 id='category'
                 name='category'
-                defaultValue='Feature Request'>
+                defaultValue='Feature Request' {...register('category', { required: true })}>
                 <option>Feature Request</option>
                 <option>Bug Fix</option>
                 <option>Improvement</option>
@@ -103,8 +145,9 @@ export default function () {
               <ReactMarkdown>{markdownBody}</ReactMarkdown>
           <Flex mx={-2} flexWrap='wrap'>
             <Label width={[1, 1]} p={2}>
-              <Textarea value={markdownBody} onChange={(e) => setMarkdownBody(e.target.value)}></Textarea>
+              <Textarea id='markdownBody' name='markdownBody' value={markdownBody} onChange={(e) => setMarkdownBody(e.target.value)}/>
             </Label>
+              {markdownBody.length <= 0 && <span>Body is required</span>}
           </Flex>
           <Flex mx={-2} flexWrap='wrap'>
             <Label width={[1, 1]} p={2}>
@@ -116,7 +159,7 @@ export default function () {
             </Label>
             <Box px={2} ml='auto'>
               <Button>
-                Beep
+                Submit
               </Button>
             </Box>
           </Flex>
