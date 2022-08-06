@@ -22,8 +22,9 @@ import {
 
 import { useWeb3React } from '@web3-react/core';
 
-import { daoAddress } from '../constants';
-import coderDaoAbi from '../abis/CoderDAO.json';
+import { daoAddress, daoTokenAddress } from "../constants";
+import coderDAOAbi from '../abis/CoderDAO.json';
+import coderDAOTokenAbi from '../abis/CoderDAOToken.json';
 
 const connection = new providers.InfuraProvider('ropsten');
 
@@ -37,10 +38,11 @@ export default function () {
   } = useForm();
   const [value, setValue] = useState();
   const [submittedProposal, setSubmittedProposal] = useState(null);
+  const [blockchainValidation, setBlockchainValidation] = useState({ result: 'unverified' });
   const [markdownBody, setMarkdownBody] = useState('# Proposal Title');
   const { account, library } = useWeb3React();
 
-  const txnFetchFn = async (data) => {
+  const submitProposalToBackend = async (data) => {
     if (!account) {
       console.error('account is undefined, returning...');
       return;
@@ -54,15 +56,56 @@ export default function () {
     });
   
     const txnResult = await response.json();
-    setSubmittedProposal(txnResult);
+    return txnResult;
   };
 
-  const onSubmit = (formData) => {
+  const submitProposalToBlockchain = async (proposal, ipfsHash) => {
+    const lib = await library
+    const signer = lib
+      .getSigner(account)
+
+    const txCount = await signer.getTransactionCount()
+
+    // The Contract object
+    const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
+    const tokenContract = new Contract(daoTokenAddress, coderDAOTokenAbi, lib.getSigner());
+    const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
+    const response = await coderDaoContract.propose(
+      [daoTokenAddress],
+      [0],
+      [transferCalldata],
+      `${proposal.title} -WITH- ${ipfsHash}`)
+    return response;
+  }
+
+  const onSubmit = async (formData) => {
     if (markdownBody.length <= 0) return;
 
+    const result = await ProposalCheckFn(formData);
+    setBlockchainValidation(result);
+
     const data = { ...formData, body: markdownBody }
-    console.log(data)
-    txnFetchFn(data)
+    const res = await submitProposalToBackend(data);
+    console.error(7771, res);
+
+    const txnResult = await submitProposalToBlockchain(data, res.ipfs);
+    console.error(9992, txnResult);
+    setSubmittedProposal(res);
+  };
+
+  const ProposalCheckFn = async (proposal) => {
+    const lib = await library;
+
+    // check for duplicates
+    const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
+    const filters = await coderDaoContract.filters.ProposalCreated();
+    const logs = await coderDaoContract.queryFilter(filters, 0, "latest");
+    const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
+
+    const duplicate = events.map(e => (e.args.description === proposal.title)).includes(true);
+
+    if (duplicate) return { result: 'error', error: 'duplicateEntry' };
+    return { result: 'ok' };
   };
 
   const ProposalRetrievalFn = async () => {
@@ -70,7 +113,7 @@ export default function () {
       const lib = await library;
 
       // The Contract object
-      const coderDao = new Contract(daoAddress, coderDaoAbi, connection);
+      const coderDao = new Contract(daoAddress, coderDAOAbi, connection);
       const daoName = await coderDao.name();
       setValue(daoName);
     }
@@ -80,7 +123,7 @@ export default function () {
     ProposalRetrievalFn();
   }, [account]);
 
-  if (submittedProposal !== null) {
+  if (submittedProposal !== null && blockchainValidation.result === 'ok') {
     return (
       <Box>
         <Card
@@ -104,6 +147,7 @@ export default function () {
           boxShadow: '0 0 16px rgba(0, 0, 0, .25)',
         }}
       >
+      {blockchainValidation && blockchainValidation.result === 'error' && <span>Failed to verify on blockchain, error: {blockchainValidation.error}</span>}
         <Box
           as='form'
           onSubmit={handleSubmit(onSubmit)}

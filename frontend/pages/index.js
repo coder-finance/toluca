@@ -4,7 +4,6 @@ import { useWeb3React } from '@web3-react/core'
 import { Contract, providers, utils } from 'ethers'
 import { proposalStub, daoAddress, daoTokenAddress } from "../constants";
 import coderDAOAbi from '../abis/CoderDAO.json'
-import coderDAOTokenAbi from '../abis/CoderDAOToken.json'
 
 const DynamicHomeGallery = dynamic(() => import("../components/HomeGallery"), {
   ssr: false,
@@ -13,26 +12,6 @@ const DynamicHomeGallery = dynamic(() => import("../components/HomeGallery"), {
 
 function HomePage(props) {
   const { account, library } = useWeb3React()
-
-  const propose = async () => {
-    const lib = await library
-    const signer = lib
-      .getSigner(account)
-
-    const txCount = await signer.getTransactionCount()
-    console.info('on propose', signer, txCount)
-
-    // The Contract object
-    const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
-    const tokenContract = new Contract(daoTokenAddress, coderDAOTokenAbi, lib.getSigner());
-    const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', proposalStub.behaviour.amount]);
-    const response = await coderDaoContract.propose(
-      [daoTokenAddress],
-      [0],
-      [transferCalldata],
-      proposalStub.title)
-    console.error('complete proposal', response)
-  }
 
   const getEvents = async() => {
     const lib = await library
