@@ -141,9 +141,13 @@ describe("CoderDAO", function () {
           [transferCalldata],
           descriptionHash
         );
-      
+
       proposalState = await instance.state(proposalId);
       assert.equal(proposalState, '7'); // 'ProposalState.Executed'
+      
+      let filters = await instance.filters.ProposalExecuted();
+      let logs = await instance.queryFilter(filters, 0, 'latest');
+      assert.equal(logs.length, 1);
 
       // Verify proposal 
       await instance.verify(
@@ -152,8 +156,13 @@ describe("CoderDAO", function () {
           [transferCalldata],
           descriptionHash
         );
+
       proposalState = await instance.state(proposalId);
       assert.equal(proposalState, '8'); // 'ProposalState.Verified'
+
+      filters = await instance.filters.ProposalVerified();
+      logs = await instance.queryFilter(filters, 0, 'latest');
+      assert.equal(logs.length, 1);
 
       // Confirm merged proposal
       await instance.confirmMerge(
@@ -164,6 +173,10 @@ describe("CoderDAO", function () {
         );
       proposalState = await instance.state(proposalId);
       assert.equal(proposalState, '9'); // 'ProposalState.Merged'
+
+      filters = await instance.filters.ProposalMerged();
+      logs = await instance.queryFilter(filters, 0, 'latest');
+      assert.equal(logs.length, 1);
 
       const contractAddress = await web3.eth.getBalance(instance.address);
       assert.equal(contractAddress, '1000000000000000000');
