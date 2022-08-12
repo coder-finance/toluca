@@ -15,6 +15,8 @@ module.exports = {
     'Queued',
     'Expired',
     'Executed',
+    'Verified',
+    'Merged'
   ),
   VoteType: Enum(
       'Against',
@@ -24,16 +26,13 @@ module.exports = {
 };
 **/
 
+async function moveBlocksHardhat(amount, interval) {
+  const amountHex = `0x${amount.toString(16)}` || "0x3e8";
+  const intervalHex = `0x${interval.toString(16)}` || "0x1";
 
-async function moveBlocks(amount) {
-    console.log("Moving blocks...");
-    for (let index = 0; index < amount; index++) {
-        await network.provider.request({
-            method: "evm_mine",
-            params: [],
-          });
-      }
-    console.log(`Moved ${amount} blocks`);
+  // mine 1000 blocks with an interval of 1 minute
+  await network.provider.send("hardhat_mine", [amountHex, intervalHex]);
+  console.log(`Moved ${parseInt(amountHex, 16)} blocks for interval of ${parseInt(intervalHex, 16)}`);
 }
 
 
@@ -55,6 +54,7 @@ describe("CoderDAO", function () {
       assert(await instance.name() === name);
       
 
+      const VOTING_START_DELAY = 420;
       const VOTING_DELAY = 45818;
       const value = web3.utils.toWei('1');
       await web3.eth.sendTransaction({ from: owner.address, to: instance.address, value });
@@ -63,6 +63,9 @@ describe("CoderDAO", function () {
       const tokenSupply = web3.utils.toWei('100');
 
       await token_instance.mint(owner.address, tokenSupply);
+      // contract needs to have some to test
+      await token_instance.mint(instance.address, tokenSupply);
+
       const startBalance = await team.getBalance();
       assert.equal(startBalance.toString(), '10000000000000000000000');
 
@@ -96,6 +99,8 @@ describe("CoderDAO", function () {
           [token_instance.address],
           [0],
           [transferCalldata],
+          1,
+          42069,
           "Proposal #1: Give grant to team",
         );
       console.log(proposalTx)
@@ -124,7 +129,7 @@ describe("CoderDAO", function () {
       assert.equal(proposalState, '1');      
       
       const descriptionHash = ethers.utils.id("Proposal #1: Give grant to team");
-      await moveBlocks(VOTING_DELAY + 1);
+      await moveBlocksHardhat(VOTING_DELAY + 1, 1);
       
       // Run proposal      
       proposalState = await instance.state(proposalId);
@@ -137,8 +142,32 @@ describe("CoderDAO", function () {
           descriptionHash
         );
       
-      assert.equal(await web3.eth.getBalance(instance.address).toString(), '0');
-      assert.equal((await team.getBalance()).toString(), value.add(startBalance).toString()); 
+      proposalState = await instance.state(proposalId);
+      assert.equal(proposalState, '7'); // 'ProposalState.Executed'
+
+      // Verify proposal 
+      await instance.verify(
+          [token_instance.address],
+          [0],
+          [transferCalldata],
+          descriptionHash
+        );
+      proposalState = await instance.state(proposalId);
+      assert.equal(proposalState, '8'); // 'ProposalState.Verified'
+
+      // Confirm merged proposal
+      await instance.confirmMerge(
+          [token_instance.address],
+          [0],
+          [transferCalldata],
+          descriptionHash
+        );
+      proposalState = await instance.state(proposalId);
+      assert.equal(proposalState, '9'); // 'ProposalState.Merged'
+
+      const contractAddress = await web3.eth.getBalance(instance.address);
+      assert.equal(contractAddress, '1000000000000000000');
+      // assert.equal((await team.getBalance()).toString(), value.add(startBalance).toString()); 
     
     });
     
