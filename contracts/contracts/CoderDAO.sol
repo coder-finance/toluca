@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GNU GPL-3
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
+import "./governance/GovernorUpgradeable2.sol";
+import "./governance/extensions/GovernorSettingsUpgradeable.sol";
+import "./governance/extensions/GovernorCountingSimpleUpgradeable.sol";
+import "./governance/extensions/GovernorVotesUpgradeable.sol";
+import "./governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -13,7 +13,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 /// @custom:security-contact security@coder.finance
 contract CoderDAO is
     Initializable,
-    GovernorUpgradeable,
+    GovernorUpgradeable2,
     GovernorSettingsUpgradeable,
     GovernorCountingSimpleUpgradeable,
     GovernorVotesUpgradeable,
@@ -35,7 +35,7 @@ contract CoderDAO is
         );
         __GovernorCountingSimple_init();
         __GovernorVotes_init(_token);
-        __GovernorVotesQuorumFraction_init(4);
+        __GovernorVotesQuorumFraction_init(1);
         __Ownable_init();
         __UUPSUpgradeable_init();
     }
@@ -51,7 +51,7 @@ contract CoderDAO is
     function votingDelay()
         public
         view
-        override(IGovernorUpgradeable, GovernorSettingsUpgradeable)
+        override(IGovernorUpgradeable2, GovernorSettingsUpgradeable)
         returns (uint256)
     {
         return super.votingDelay();
@@ -60,7 +60,7 @@ contract CoderDAO is
     function votingPeriod()
         public
         view
-        override(IGovernorUpgradeable, GovernorSettingsUpgradeable)
+        override(IGovernorUpgradeable2, GovernorSettingsUpgradeable)
         returns (uint256)
     {
         return super.votingPeriod();
@@ -69,7 +69,7 @@ contract CoderDAO is
     function quorum(uint256 blockNumber)
         public
         view
-        override(IGovernorUpgradeable, GovernorVotesQuorumFractionUpgradeable)
+        override(IGovernorUpgradeable2, GovernorVotesQuorumFractionUpgradeable)
         returns (uint256)
     {
         return super.quorum(blockNumber);
@@ -78,7 +78,7 @@ contract CoderDAO is
     function proposalThreshold()
         public
         view
-        override(GovernorUpgradeable, GovernorSettingsUpgradeable)
+        override(GovernorUpgradeable2, GovernorSettingsUpgradeable)
         returns (uint256)
     {
         return super.proposalThreshold();
