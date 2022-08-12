@@ -26,7 +26,7 @@ contract CoderDAO is
         _disableInitializers();
     }
 
-    function initialize(IVotesUpgradeable _token) public initializer {
+    function initialize(IVotesUpgradeable _token, uint256 _quorum) public initializer {
         __Governor_init("CoderDAO");
         __GovernorSettings_init(
             1, /* 1 block */
@@ -35,7 +35,7 @@ contract CoderDAO is
         );
         __GovernorCountingSimple_init();
         __GovernorVotes_init(_token);
-        __GovernorVotesQuorumFraction_init(1);
+        __GovernorVotesQuorumFraction_init(_quorum);
         __Ownable_init();
         __UUPSUpgradeable_init();
     }

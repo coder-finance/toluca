@@ -50,7 +50,7 @@ describe("CoderDAO", function () {
       const [ owner, proposer, voter1, voter2, voter3, voter4, team ] = await ethers.getSigners();
           
       const token_instance = await upgrades.deployProxy(this.token, {kind: 'uups'});
-      const instance = await upgrades.deployProxy(this.dao, [token_instance.address]);
+      const instance = await upgrades.deployProxy(this.dao, [token_instance.address, 1], {kind: 'uups'});
       assert(await instance.name() === name);
       
 
@@ -173,8 +173,8 @@ describe("CoderDAO", function () {
     
     it("Should be able to upgrade", async function () {
       const token_instance = await upgrades.deployProxy(this.token, {kind: 'uups'});
-      const instance = await upgrades.deployProxy(this.dao, [token_instance.address]);
-      const daoV2 = await upgrades.upgradeProxy(instance, this.daoV2);
+      const instance = await upgrades.deployProxy(this.dao, [token_instance.address, '1']);
+      const daoV2 = await upgrades.upgradeProxy(instance, this.daoV2, {kind: 'uups'});
       assert(await daoV2.version() === '2');
     });
   });
