@@ -22,7 +22,7 @@ import {
 
 import { useWeb3React } from '@web3-react/core';
 
-import { daoAddress, daoTokenAddress } from "../constants";
+import { daoAddress, daoTokenAddress } from '../constants';
 import coderDAOAbi from '../abis/CoderDAO.json';
 import coderDAOTokenAbi from '../abis/CoderDAOToken.json';
 
@@ -47,24 +47,24 @@ export default function () {
       console.error('account is undefined, returning...');
       return;
     }
-  
+
     const payload = { ...data, initiator: account };
-  
+
     const response = await fetch('/api/propose', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
-  
+
     const txnResult = await response.json();
     return txnResult;
   };
 
   const submitProposalToBlockchain = async (proposal, ipfsHash) => {
-    const lib = await library
+    const lib = await library;
     const signer = lib
-      .getSigner(account)
+      .getSigner(account);
 
-    const txCount = await signer.getTransactionCount()
+    const txCount = await signer.getTransactionCount();
 
     // The Contract object
     const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
@@ -74,9 +74,10 @@ export default function () {
       [daoTokenAddress],
       [0],
       [transferCalldata],
-      `${proposal.title} -WITH- ${ipfsHash}`)
+      `${proposal.title} -WITH- ${ipfsHash}`
+    );
     return response;
-  }
+  };
 
   const onSubmit = async (formData) => {
     if (markdownBody.length <= 0) return;
@@ -84,7 +85,7 @@ export default function () {
     const result = await ProposalCheckFn(formData);
     setBlockchainValidation(result);
 
-    const data = { ...formData, body: markdownBody }
+    const data = { ...formData, body: markdownBody };
     const res = await submitProposalToBackend(data);
     console.error(7771, res);
 
@@ -99,27 +100,27 @@ export default function () {
     // check for duplicates
     const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
     const filters = await coderDaoContract.filters.ProposalCreated();
-    const logs = await coderDaoContract.queryFilter(filters, 0, "latest");
+    const logs = await coderDaoContract.queryFilter(filters, 0, 'latest');
     const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
 
-    const duplicate = events.map(e => (e.args.description === proposal.title)).includes(true);
+    const duplicate = events.map((e) => (e.args.description === proposal.title)).includes(true);
 
     if (duplicate) return { result: 'error', error: 'duplicateEntry' };
     return { result: 'ok' };
   };
 
-  const ProposalRetrievalFn = async () => {
-    if (account) {
-      const lib = await library;
-
-      // The Contract object
-      const coderDao = new Contract(daoAddress, coderDAOAbi, connection);
-      const daoName = await coderDao.name();
-      setValue(daoName);
-    }
-  };
-
   useEffect(() => {
+    const ProposalRetrievalFn = async () => {
+      if (account) {
+        const lib = await library;
+
+        // The Contract object
+        const coderDao = new Contract(daoAddress, coderDAOAbi, connection);
+        const daoName = await coderDao.name();
+        setValue(daoName);
+      }
+    };
+
     ProposalRetrievalFn();
   }, [account]);
 
@@ -133,75 +134,86 @@ export default function () {
             boxShadow: '0 0 16px rgba(0, 0, 0, .25)',
           }}
         >
-          Proposal submitted successfully: {submittedProposal.ipfs}
+          Proposal submitted successfully:
+          {' '}
+          {submittedProposal.ipfs}
         </Card>
-      </Box>);
+      </Box>
+    );
   }
 
   return (
     <Box>
       <Card
         sx={{
-          p: 1,
+          p: 3,
           borderRadius: 2,
           boxShadow: '0 0 16px rgba(0, 0, 0, .25)',
         }}
       >
-      {blockchainValidation && blockchainValidation.result === 'error' && <span>Failed to verify on blockchain, error: {blockchainValidation.error}</span>}
+        {blockchainValidation && blockchainValidation.result === 'error' && (
+          <span>
+            Failed to verify on blockchain, error:
+            {blockchainValidation.error}
+          </span>
+        )}
         <Box
-          as='form'
+          as="form"
           onSubmit={handleSubmit(onSubmit)}
-          py={3}>
+          py={3}
+        >
           <Flex mx={-2} mb={3}>
-            <Box width={1/2} px={2}>
-              <Label htmlFor='title'>Title</Label>
+            <Box width={1 / 2} px={2}>
+              <Label htmlFor="title">Title</Label>
               <Input
-                id='title'
-                name='title'
-                {...register('title', { required: true })} 
+                id="title"
+                name="title"
+                {...register('title', { required: true })}
               />
               {errors.title && <span>Title is required</span>}
             </Box>
-            <Box width={1/2} px={2}>
-              <Label htmlFor='bounty'>Bounty (Ξ)</Label>
+            <Box width={1 / 2} px={2}>
+              <Label htmlFor="bounty">Bounty (Ξ)</Label>
               <Input
-                id='bounty'
-                name='bounty'
-                type='number'
-                min='0'
-                max='5000'
-                {...register('bounty', { required: true })} 
+                id="bounty"
+                name="bounty"
+                type="number"
+                min="0"
+                max="5000"
+                {...register('bounty', { required: true })}
               />
               {errors.bounty && <span>Bounty is required</span>}
             </Box>
-            <Box width={1/2} px={2}>
-              <Label htmlFor='category'>Category</Label>
+            <Box width={1 / 2} px={2}>
+              <Label htmlFor="category">Category</Label>
               <Select
-                id='category'
-                name='category'
-                defaultValue='Feature Request' {...register('category', { required: true })}>
+                id="category"
+                name="category"
+                defaultValue="Feature Request"
+                {...register('category', { required: true })}
+              >
                 <option>Feature Request</option>
                 <option>Bug Fix</option>
                 <option>Improvement</option>
               </Select>
             </Box>
           </Flex>
-              <ReactMarkdown>{markdownBody}</ReactMarkdown>
-          <Flex mx={-2} flexWrap='wrap'>
+          <ReactMarkdown>{markdownBody}</ReactMarkdown>
+          <Flex mx={-2} flexWrap="wrap">
             <Label width={[1, 1]} p={2}>
-              <Textarea id='markdownBody' name='markdownBody' value={markdownBody} onChange={(e) => setMarkdownBody(e.target.value)}/>
+              <Textarea id="markdownBody" name="markdownBody" value={markdownBody} onChange={(e) => setMarkdownBody(e.target.value)} />
             </Label>
-              {markdownBody.length <= 0 && <span>Body is required</span>}
+            {markdownBody.length <= 0 && <span>Body is required</span>}
           </Flex>
-          <Flex mx={-2} flexWrap='wrap'>
+          <Flex mx={-2} flexWrap="wrap">
             <Label width={[1, 1]} p={2}>
               <Checkbox
-                id='agree'
-                name='agree'
+                id="agree"
+                name="agree"
               />
               I agree to the coderDAO terms and conditions and code of conduct.
             </Label>
-            <Box px={2} ml='auto'>
+            <Box px={2} ml="auto">
               <Button>
                 Submit
               </Button>
