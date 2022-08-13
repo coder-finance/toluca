@@ -1,13 +1,12 @@
-import ProposalForm from '../../components/ProposalForm'
-import dynamic from "next/dynamic";
+import { Box } from "rebass";
+import ProposalForm from '../../components/ProposalForm';
 
-// const DynamicProposeButton = dynamic(() => import('../../components/VoteButton'), {
-//   ssr: false,
-// });
+function Propose() {
+  return (
+    <Box p={3}>
+      <ProposalForm />
+    </Box>
+  );
+}
 
-const Propose = () => (<div>
-  <ProposalForm />
-  {/* <DynamicProposeButton variant='primary' mr={2}>Propose</DynamicProposeButton> */}
-</div>)
-
-export default Propose
+export default Propose;
