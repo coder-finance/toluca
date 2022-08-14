@@ -40,10 +40,10 @@ function HomeGallery(props) {
   return (
     <Flex flexWrap="wrap">
       {proposals
-        && proposals.map((n, i) => (
+        && proposals.map((proposal, i) => (
           <FlexBox key={i} width={[1, 1 / 2]} p={3}>
-            <Link href={`/proposals/${i}`}>
-              <Proposal proposal={n} previewOnly />
+            <Link href={`/proposals/${proposal.id}`}>
+              <Proposal proposal={proposal} previewOnly />
             </Link>
           </FlexBox>
         ))}
