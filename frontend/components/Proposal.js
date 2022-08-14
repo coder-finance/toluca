@@ -15,10 +15,20 @@ import { SampleArticle, FullSample, PreviewSample } from './core/Article';
 
 import cryptoDoggyAbi from '../abis/CoderDAO.json';
 
+import { create as client, urlSource } from 'ipfs-http-client';
+import { shop, asset, ipfs as ipfsAddr } from '../constants';
+const ipfs = client(ipfsAddr.host);
+
 const connection = new providers.InfuraProvider('ropsten');
 
 const ipfsLookup = async (hash, setProposalIPFSPath) => {
   setProposalIPFSPath(`http://localhost:8080/ipfs/${hash}`);
+};
+
+
+const ipfsDownload = async (url) => {
+  const file = await ipfs.add(urlSource(url))
+  console.log(file)
 };
 
 export default function ({ proposal, previewOnly }) {
@@ -26,9 +36,11 @@ export default function ({ proposal, previewOnly }) {
   const [value, setValue] = useState();
   const { account, library } = useWeb3React();
 
-  console.log("Proposal:", proposal);
+  console.log("Proposal111:", proposal);
   useEffect(() => {
+    console.log("aaa")
     const ipfsLookupFn = async (proposal) => {
+      ipfsDownload(`http://localhost:8080/ipfs/${proposal.image}`);
       ipfsLookup(proposal.image, setProposalIPFSPath);
     };
     if (proposal) {
@@ -37,19 +49,19 @@ export default function ({ proposal, previewOnly }) {
     }
   }, [proposalIPFSPath]);
 
-  useEffect(() => {
-    const ProposalRetrievalFn = async () => {
-      if (account) {
-        const lib = await library;
+  // useEffect(() => {
+  //   const ProposalRetrievalFn = async () => {
+  //     if (account) {
+  //       const lib = await library;
 
-        // The Contract object
-        const coderDao = new Contract(daoAddress, cryptoDoggyAbi, connection);
-        const daoName = await coderDao.name();
-        setValue(daoName);
-      }
-    };
-    ProposalRetrievalFn();
-  }, [account]);
+  //       // The Contract object
+  //       const coderDao = new Contract(daoAddress, cryptoDoggyAbi, connection);
+  //       const daoName = await coderDao.name();
+  //       setValue(daoName);
+  //     }
+  //   };
+  //   ProposalRetrievalFn();
+  // }, [account]);
 
   if (!proposal) return (<>Loading...</>);
 
