@@ -75,7 +75,8 @@ async fn index(code: &str) -> std::string::String  {
     println!("code: {}", code);
     // You don't need a token when you are only dealing with webhooks.
     let http = Http::new("");
-    let webhook = Webhook::from_url(&http, "https://discord.com/api/webhooks/1007914884962467850/fl-iiIbbBE-VEzAtBorQexzF0AhGhBEs8fBjwlvB4zVc7aAzxyhTTNLhnIbPat3Xa53-").await.expect("Bad webhook");
+    let webhook_url = env::var("DISCORD_WEBHOOK").expect("Expected DISCORD_WEBHOOK in the environment");
+    let webhook = Webhook::from_url(&http, &webhook_url).await.expect("Bad webhook");
 
     webhook
         .execute(&http, false, |w| w.content(["received code and sent to discord: ", code].join("")).username("coder-reporter"))
@@ -86,30 +87,25 @@ async fn index(code: &str) -> std::string::String  {
 }
 
 async fn poll_ethereum() -> web3::Result<()>{
-    let transport = web3::transports::Http::new("https://ropsten.infura.io/v3/2f23d44442364325a40ed89eb1b221dc")?;
+    let webhook_url = env::var("DISCORD_WEBHOOK").expect("Expected DISCORD_WEBHOOK in the environment");
+    let eth_url = env::var("ETHEREUM_NODE").expect("Expected ETHEREUM_NODE in the environment");
+
+    let address_coderdao = "0x346787C77d6720db91Ce140120457e20Fdd4D02c";
+
+    // look this up in etherscan https://ropsten.etherscan.io/address/0x346787C77d6720db91Ce140120457e20Fdd4D02c#events
+    let event_hash = hex!("7d84a6263ae0d98d3329bd7b46bb4e8d6f98cd35a7adb45c274c8b7fd5ebd5e0").into(); 
+    let sleep_time = 100000;
+
+    let transport = web3::transports::Http::new(&eth_url)?;
     let web3 = web3::Web3::new(transport);
 
     loop {
-        // let mut accounts = web3.eth().accounts().await?;
-        // println!("Accounts init: {:?}", accounts);
-        // println!("Calling accounts.");
-        // accounts.push("0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD".parse().unwrap());
-        // println!("Accounts2: {:?}", accounts);
-    
-        // println!("Calling balance.");
-        // for account in accounts {
-        //     let balance = web3.eth().balance(account, None).await?;
-        //     println!("Balance of {:?}: {}", account, balance);
-        // }
-
         let filter = web3::types::FilterBuilder::default()
             .from_block(BlockNumber::Number(U64::from(0)))
-            .address(vec![Address::from_str("0x346787C77d6720db91Ce140120457e20Fdd4D02c").unwrap()])
+            .address(vec![Address::from_str(address_coderdao).unwrap()])
             .topics(
-                Some(vec![hex!(
-                    "7d84a6263ae0d98d3329bd7b46bb4e8d6f98cd35a7adb45c274c8b7fd5ebd5e0"
-                )
-                .into()]),
+                Some(vec![
+                    event_hash]),
                 None,
                 None,
                 None,
@@ -124,7 +120,7 @@ async fn poll_ethereum() -> web3::Result<()>{
 
         // You don't need a token when you are only dealing with webhooks.
         let http = Http::new("");
-        let webhook = Webhook::from_url(&http, "https://discord.com/api/webhooks/1007914884962467850/fl-iiIbbBE-VEzAtBorQexzF0AhGhBEs8fBjwlvB4zVc7aAzxyhTTNLhnIbPat3Xa53-").await.expect("Bad webhook");
+        let webhook = Webhook::from_url(&http, &webhook_url).await.expect("Bad webhook");
 
         webhook
             .execute(&http, false, |w| w.content(["new logs retrieved: ", &*logs.len().to_string()].join("")).username("coder-reporter"))
@@ -136,12 +132,17 @@ async fn poll_ethereum() -> web3::Result<()>{
             println!("> log: {}", serialized_log);
         }
 
-        tokio::time::sleep(Duration::from_millis(100000)).await;
+        tokio::time::sleep(Duration::from_millis(sleep_time)).await;
     }
 }
 
 #[launch]
 fn rocket() -> _ {
+    // Configure the client with your Discord bot token in the environment.
+    env::var("DISCORD_TOKEN").expect("Expected DISCORD_TOKEN in the environment");
+    env::var("DISCORD_WEBHOOK").expect("Expected DISCORD_WEBHOOK in the environment");
+    env::var("ETHEREUM_NODE").expect("Expected ETHEREUM_NODE in the environment");
+
     tokio::spawn(async move {
         discord_bot().await;
     });
