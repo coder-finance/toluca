@@ -17,5 +17,5 @@ RUN cargo build --release
 FROM rust:1.62
 
 COPY --from=build /toluca/target/release/toluca .
-
+EXPOSE 8000
 CMD ["./toluca"]
