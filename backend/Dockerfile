@@ -2,7 +2,7 @@ FROM rust:1.62 as build
 
 RUN USER=root cargo new --bin toluca
 WORKDIR /toluca
-COPY ./Cargo.lock ./Cargo.lock
+# COPY ./Cargo.lock ./Cargo.lock
 COPY ./Cargo.toml ./Cargo.toml
 
 # Cache dependencies
