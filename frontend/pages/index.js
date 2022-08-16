@@ -1,4 +1,4 @@
-import { Box, Button } from "rebass";
+import { Box, Button, Flex, Link, Heading } from "rebass";
 import dynamic from "next/dynamic";
 import { useWeb3React } from '@web3-react/core'
 import { Contract, providers, utils } from 'ethers'
@@ -13,7 +13,7 @@ const DynamicHomeGallery = dynamic(() => import("../components/HomeGallery"), {
 function HomePage(props) {
   const { account, library } = useWeb3React()
 
-  const getEvents = async() => {
+  const getEvents = async () => {
     const lib = await library
 
     // get from events the proposal details
@@ -29,15 +29,24 @@ function HomePage(props) {
   }
 
   return (
-    <Box
-      sx={{
-        px: 3,
-      }}
-    >
-    {/* <Button onClick={propose}>Propose New</Button> */}
-    <Button onClick={getEvents}>Events</Button>
-      {/* <Heading as="h1" children="Proposal Gallery" mb={3} fontSize={[4, 5, 6]} /> */}
-      <DynamicHomeGallery />
+    <Box p={3}>
+      <Flex>
+        <Box
+          p={3}
+        >
+          <Link href={`/proposals/propose`}><Button>Propose New</Button></Link>
+        </Box>
+
+        <Box
+          p={3}
+        >
+          <Button onClick={getEvents}>Events</Button>
+        </Box>
+      </Flex>
+      <Box>
+        <Heading as="h1" children="Proposal Gallery" mb={3} fontSize={[4, 5, 6]} />
+        <DynamicHomeGallery />
+      </Box>
     </Box>
   );
 }

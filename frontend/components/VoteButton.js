@@ -30,28 +30,29 @@ export default function (props) {
     setTransaction(result);
   });
 
-  const txnFetchFn = async () => {
-    if (!transaction) {
-      console.error('transaction is undefined, returning...');
-      return;
-    }
 
-    if (!account) {
-      console.error('account is undefined, returning...');
-      return;
-    }
 
-    const payload = { ...transaction, recipient: account, price: cost };
+  useEffect(() => {
+    const txnFetchFn = async () => {
+      if (!transaction) {
+        console.error('transaction is undefined, returning...');
+      } else if (!account) {
+        console.error('account is undefined, returning...');
+      } else {
+        console.log("Getting proposal...");
+        const payload = { ...transaction, recipient: account, price: cost };
 
-    const response = await fetch('/api/propose', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+        const response = await fetch('/api/propose', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
 
-    const txnResult = await response.json();
-  };
+        const txnResult = await response.json();
+      }
+    };
 
-  useEffect(txnFetchFn, [transaction]);
+    txnFetchFn();
+  }, [transaction]);
 
   const onClick = async () => {
     const lib = await library;

@@ -15,50 +15,55 @@ import { SampleArticle, FullSample, PreviewSample } from './core/Article';
 
 import cryptoDoggyAbi from '../abis/CoderDAO.json';
 
+import { create as client, urlSource } from 'ipfs-http-client';
+import { shop, asset, ipfs as ipfsAddr } from '../constants';
+const ipfs = client(ipfsAddr.host);
+
 const connection = new providers.InfuraProvider('ropsten');
 
 const ipfsLookup = async (hash, setProposalIPFSPath) => {
   setProposalIPFSPath(`http://localhost:8080/ipfs/${hash}`);
 };
 
+
+const ipfsDownload = async (url) => {
+  const file = await ipfs.add(urlSource(url))
+  console.log(file)
+};
+
 export default function ({ proposal, previewOnly }) {
   const [proposalIPFSPath, setProposalIPFSPath] = useState();
-  const [owned, setOwned] = useState();
   const [value, setValue] = useState();
   const { account, library } = useWeb3React();
 
-  if (!proposal) return (<>Loading...</>);
-
-  const {
-    title,
-    image,
-    address,
-    description,
-    meta,
-  } = proposal;
-
-  const ipfsLookupFn = async () => {
-    ipfsLookup(image, setProposalIPFSPath);
-  };
-
+  console.log("Proposal111:", proposal);
   useEffect(() => {
-    ipfsLookupFn();
+    console.log("aaa")
+    const ipfsLookupFn = async (proposal) => {
+      ipfsDownload(`http://localhost:8080/ipfs/${proposal.image}`);
+      ipfsLookup(proposal.image, setProposalIPFSPath);
+    };
+    if (proposal) {
+      console.log("IPFS lookup of a proposal", proposal);
+      ipfsLookupFn(proposal);
+    }
   }, [proposalIPFSPath]);
 
-  const ProposalRetrievalFn = async () => {
-    if (account) {
-      const lib = await library;
+  // useEffect(() => {
+  //   const ProposalRetrievalFn = async () => {
+  //     if (account) {
+  //       const lib = await library;
 
-      // The Contract object
-      const coderDao = new Contract(daoAddress, cryptoDoggyAbi, connection);
-      const daoName = await coderDao.name();
-      setValue(daoName);
-    }
-  };
+  //       // The Contract object
+  //       const coderDao = new Contract(daoAddress, cryptoDoggyAbi, connection);
+  //       const daoName = await coderDao.name();
+  //       setValue(daoName);
+  //     }
+  //   };
+  //   ProposalRetrievalFn();
+  // }, [account]);
 
-  useEffect(() => {
-    ProposalRetrievalFn();
-  }, [account]);
+  if (!proposal) return (<>Loading...</>);
 
   return (
     <Box>
@@ -71,21 +76,18 @@ export default function ({ proposal, previewOnly }) {
       >
         <Image src={proposalIPFSPath} style={{ maxHeight: '500px' }} />
 
-        { previewOnly
-          ? (
-            <Box px={2}>
-              <Heading as="h3">
-                {title}
-              </Heading>
-              <Text fontSize={0}>
-                {description}
-              </Text>
-              <Text fontSize={0}>
-                {value && `Ξ${value}`}
-              </Text>
-            </Box>
-          )
-          : <SampleArticle previewOnly={previewOnly} /> }
+        <Box px={2}>
+          <Heading as="h3">
+            {proposal.title}
+          </Heading>
+          <Text fontSize={0}>
+            {proposal.description}
+          </Text>
+          <Text fontSize={0}>
+            {value && `Ξ${value}`}
+          </Text>
+        </Box>
+
       </Card>
     </Box>
   );
