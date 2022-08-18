@@ -2,7 +2,12 @@ use std::env;
 #[macro_use] extern crate rocket;
 extern crate web3;
 
+use rocket::serde::{json::Json};
+
+mod github_data;
+
 use std::str::FromStr;
+
 use web3::types::{BlockNumber, U64, Address};
 use hex_literal::hex;
 
@@ -86,6 +91,23 @@ async fn index(code: &str) -> std::string::String  {
     ["received code and sent to discord: ", code].join("")
 }
 
+#[post("/", format = "application/json", data = "<data>")]
+async fn github_webhook_recv(data: Json<github_data::GithubData<'_>>) -> Option<&str>  {
+    println!("zen: {}", data.zen);
+    println!("repo: {}", data.repository.name);
+    println!("sender: {}", data.sender.as_ref()?.login);
+    // let http = Http::new("");
+    // let webhook_url = env::var("DISCORD_WEBHOOK").expect("Expected DISCORD_WEBHOOK in the environment");
+    // let webhook = Webhook::from_url(&http, &webhook_url).await.expect("Bad webhook");
+
+    // webhook
+    //     .execute(&http, false, |w| w.content(["received code and sent to discord: ", code].join("")).username("coder-reporter"))
+    //     .await
+    //     .expect("Could not execute webhook.");
+
+    Some("{ \"status\": \"ok\" }")
+}
+
 async fn poll_ethereum() -> web3::Result<()>{
     let webhook_url = env::var("DISCORD_WEBHOOK").expect("Expected DISCORD_WEBHOOK in the environment");
     let eth_url = env::var("ETHEREUM_NODE").expect("Expected ETHEREUM_NODE in the environment");
@@ -154,5 +176,5 @@ fn rocket() -> _ {
     });
 
     rocket::build()
-        .mount("/", routes![index])
+        .mount("/", routes![index, github_webhook_recv])
 }
