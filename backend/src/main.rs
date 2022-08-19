@@ -2,7 +2,10 @@ use std::env;
 #[macro_use] extern crate rocket;
 extern crate web3;
 
-use rocket::serde::{json::Json};
+// use rocket::serde::{json::Json};
+use rocket::data::{Data, ToByteUnit};
+
+use serde_json::Value;
 
 mod github_data;
 
@@ -17,6 +20,7 @@ use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 use serenity::http::Http;
 use serenity::model::webhook::Webhook;
+use serenity::model::channel::Embed;
 
 use tokio::time::Duration;
 
@@ -52,28 +56,28 @@ impl EventHandler for Handler {
     }
 }
 
-async fn discord_bot() {
-    // Configure the client with your Discord bot token in the environment.
-    let token = env::var("DISCORD_TOKEN").expect("Expected DISCORD_TOKEN in the environment");
-    // Set gateway intents, which decides what events the bot will be notified about
-    let intents = GatewayIntents::GUILD_MESSAGES
-        | GatewayIntents::DIRECT_MESSAGES
-        | GatewayIntents::MESSAGE_CONTENT;
+// async fn discord_bot() {
+//     // Configure the client with your Discord bot token in the environment.
+//     let token = env::var("DISCORD_TOKEN").expect("Expected DISCORD_TOKEN in the environment");
+//     // Set gateway intents, which decides what events the bot will be notified about
+//     let intents = GatewayIntents::GUILD_MESSAGES
+//         | GatewayIntents::DIRECT_MESSAGES
+//         | GatewayIntents::MESSAGE_CONTENT;
 
-    // Create a new instance of the Client, logging in as a bot. This will
-    // automatically prepend your bot token with "Bot ", which is a requirement
-    // by Discord for bot users.
-    let mut client =
-        Client::builder(&token, intents).event_handler(Handler).await.expect("Err creating client");
+//     // Create a new instance of the Client, logging in as a bot. This will
+//     // automatically prepend your bot token with "Bot ", which is a requirement
+//     // by Discord for bot users.
+//     let mut client =
+//         Client::builder(&token, intents).event_handler(Handler).await.expect("Err creating client");
 
-    // Finally, start a single shard, and start listening to events.
-    //
-    // Shards will automatically attempt to reconnect, and will perform
-    // exponential backoff until it reconnects.
-    if let Err(why) = client.start().await {
-        println!("Discord bot error: {:?}", why);
-    }
-}
+//     // Finally, start a single shard, and start listening to events.
+//     //
+//     // Shards will automatically attempt to reconnect, and will perform
+//     // exponential backoff until it reconnects.
+//     if let Err(why) = client.start().await {
+//         println!("Discord bot error: {:?}", why);
+//     }
+// }
 
 #[get("/?<code>")]
 async fn index(code: &str) -> std::string::String  {
@@ -92,18 +96,55 @@ async fn index(code: &str) -> std::string::String  {
 }
 
 #[post("/", format = "application/json", data = "<data>")]
-async fn github_webhook_recv(data: Json<github_data::GithubData<'_>>) -> Option<&str>  {
-    println!("zen: {}", data.zen);
-    println!("repo: {}", data.repository.name);
-    println!("sender: {}", data.sender.as_ref()?.login);
-    // let http = Http::new("");
-    // let webhook_url = env::var("DISCORD_WEBHOOK").expect("Expected DISCORD_WEBHOOK in the environment");
-    // let webhook = Webhook::from_url(&http, &webhook_url).await.expect("Bad webhook");
+async fn github_webhook_recv(data: Data<'_>) -> Option<&str>  {
+    let string = data.open(128.kibibytes()).into_string().await.ok()?;
 
-    // webhook
-    //     .execute(&http, false, |w| w.content(["received code and sent to discord: ", code].join("")).username("coder-reporter"))
-    //     .await
-    //     .expect("Could not execute webhook.");
+    let v: Value = serde_json::from_str(&*string.value).ok()?;
+
+    if v.get("zen") != None {
+        println!("It's a ping!");
+        println!("{}", v["zen"]);
+    } else if v.get("pusher") != None {
+        println!("It's a push");
+        println!("from {} to {}", v["before"], v["after"]);
+        println!("{}", v["pusher"]["name"]);
+    } else if v.get("pull_request") != None {
+        println!("It's a pull-request...");
+        if v["action"] == "opened" {
+            println!("> OPEN, #{}", v["number"]);
+            println!("> Review at {}", v["pull_request"]["html_url"]);
+            println!("> \"{}\"", v["pull_request"]["title"]);
+            println!("> \"{}\"", v["pull_request"]["body"]);
+            println!("> By User: {}", v["pull_request"]["user"]["login"]);
+            println!("> Downstream @ {}", v["pull_request"]["head"]["repo"]["full_name"]);
+            println!("> {}", v["pull_request"]["head"]["repo"]["html_url"]);
+
+
+            let pull_request_content = format!("New Pull Request #{}", v["number"]);
+            let pull_request_title = format!("{}", v["pull_request"]["title"]);
+            let pull_request_description = format!("{}", v["pull_request"]["body"]);
+            let pull_request_url = v["pull_request"]["html_url"].to_string();
+            let trimmed_url = &pull_request_url[1..pull_request_url.len()-1];
+
+            let http = Http::new("");
+            let webhook_url = env::var("DISCORD_WEBHOOK").expect("Expected DISCORD_WEBHOOK in the environment");
+            let webhook = Webhook::from_url(&http, &webhook_url).await.expect("Bad webhook");
+
+            let embed = Embed::fake(|e| e
+                .title(pull_request_title)
+                .description(pull_request_description)
+                .url(&trimmed_url));
+
+            webhook
+                .execute(&http, false, |w| w.content(pull_request_content).embeds(vec![embed]).username("github"))
+                .await
+                .expect("Could not execute webhook.");
+        } else {
+            println!("dunno how to handle");
+        }
+    } else {
+        println!("It's something else");
+    }
 
     Some("{ \"status\": \"ok\" }")
 }
@@ -116,7 +157,7 @@ async fn poll_ethereum() -> web3::Result<()>{
 
     // look this up in etherscan https://ropsten.etherscan.io/address/0x346787C77d6720db91Ce140120457e20Fdd4D02c#events
     let event_hash = hex!("7d84a6263ae0d98d3329bd7b46bb4e8d6f98cd35a7adb45c274c8b7fd5ebd5e0").into(); 
-    let sleep_time = 100000;
+    let sleep_time = 3600000;
 
     let transport = web3::transports::Http::new(&eth_url)?;
     let web3 = web3::Web3::new(transport);
@@ -165,9 +206,9 @@ fn rocket() -> _ {
     env::var("DISCORD_WEBHOOK").expect("Expected DISCORD_WEBHOOK in the environment");
     env::var("ETHEREUM_NODE").expect("Expected ETHEREUM_NODE in the environment");
 
-    tokio::spawn(async move {
-        discord_bot().await;
-    });
+    // tokio::spawn(async move {
+    //     discord_bot().await;
+    // });
 
     tokio::spawn(async move {
         if let Err(why) = poll_ethereum().await {
