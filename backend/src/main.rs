@@ -166,9 +166,15 @@ async fn poll_ethereum() -> web3::Result<()>{
     let transport = web3::transports::Http::new(&eth_url)?;
     let web3 = web3::Web3::new(transport);
 
+    let mut block_num = web3.eth().block_number().await?;
+    println!("Listening from block #{}", block_num);
+
     loop {
+        println!("Querying starting from block #{}", block_num);
+
         let filter = web3::types::FilterBuilder::default()
-            .from_block(BlockNumber::Number(U64::from(0)))
+            // .from_block(BlockNumber::Number(U64::from(0)))
+            .from_block(BlockNumber::Number(block_num))
             .address(vec![Address::from_str(address_coderdao).unwrap()])
             .topics(
                 Some(vec![
@@ -199,6 +205,7 @@ async fn poll_ethereum() -> web3::Result<()>{
             println!("> log: {}", serialized_log);
         }
 
+        block_num = web3.eth().block_number().await?;
         tokio::time::sleep(Duration::from_millis(sleep_time)).await;
     }
 }
