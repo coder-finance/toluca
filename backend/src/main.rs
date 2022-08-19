@@ -12,6 +12,7 @@ mod github_data;
 use std::str::FromStr;
 
 use web3::types::{BlockNumber, U64, Address};
+
 use hex_literal::hex;
 
 use serenity::async_trait;
@@ -152,12 +153,15 @@ async fn github_webhook_recv(data: Data<'_>) -> Option<&str>  {
 async fn poll_ethereum() -> web3::Result<()>{
     let webhook_url = env::var("DISCORD_WEBHOOK").expect("Expected DISCORD_WEBHOOK in the environment");
     let eth_url = env::var("ETHEREUM_NODE").expect("Expected ETHEREUM_NODE in the environment");
+    let poll_period = env::var("POLL_PERIOD").unwrap_or(3600000.to_string());
+    let sleep_time = poll_period.parse::<u64>().expect("Sleep time not a u64");
+
+    println!("Polling period set to {}", poll_period);
 
     let address_coderdao = "0x346787C77d6720db91Ce140120457e20Fdd4D02c";
 
     // look this up in etherscan https://ropsten.etherscan.io/address/0x346787C77d6720db91Ce140120457e20Fdd4D02c#events
     let event_hash = hex!("7d84a6263ae0d98d3329bd7b46bb4e8d6f98cd35a7adb45c274c8b7fd5ebd5e0").into(); 
-    let sleep_time = 3600000;
 
     let transport = web3::transports::Http::new(&eth_url)?;
     let web3 = web3::Web3::new(transport);
