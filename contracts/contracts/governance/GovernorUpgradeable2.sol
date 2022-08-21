@@ -255,6 +255,19 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         return "";
     }
 
+    function contribute(
+        string memory contributionAddress // identifier for looking up the downstream merge request
+                                          // e.g. https://github.com/coder-finance/demo-dao/pull/2
+    ) public virtual returns (uint256) {
+        /* implicit : caller address */ // where we pay to when it is merged
+        /* 100 bond amount being transferred in CODER */
+    }
+
+    // proposal-pull_request-contributor
+    // 1. establish this link
+    // 2. commit-verify-merge flow
+    // 3. payouts and refunds
+
     /**
      * @dev See {IGovernor-propose}.
      */
