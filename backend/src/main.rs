@@ -89,7 +89,7 @@ async fn index(code: &str) -> std::string::String  {
     let webhook = Webhook::from_url(&http, &webhook_url).await.expect("Bad webhook");
 
     webhook
-        .execute(&http, false, |w| w.content(["received code and sent to discord: ", code].join("")).username("coder-reporter"))
+        .execute(&http, false, |w| w.content(["received code and sent to discord: ", code].join("")).username("toluca"))
         .await
         .expect("Could not execute webhook.");
 
@@ -158,6 +158,14 @@ async fn poll_ethereum() -> web3::Result<()>{
 
     println!("Polling period set to {}", poll_period);
 
+    let http = Http::new("");
+    let webhook = Webhook::from_url(&http, &webhook_url).await.expect("Bad webhook");
+
+    webhook
+        .execute(&http, false, |w| w.content(format!("Starting Toluca.\nPolling period set to {}", poll_period)).username("toluca"))
+        .await
+        .expect("Could not execute webhook.");
+
     let address_coderdao = "0x346787C77d6720db91Ce140120457e20Fdd4D02c";
 
     // look this up in etherscan https://ropsten.etherscan.io/address/0x346787C77d6720db91Ce140120457e20Fdd4D02c#events
@@ -190,13 +198,14 @@ async fn poll_ethereum() -> web3::Result<()>{
         let logs = filter.logs().await?;
 
         println!("got logs: {}", logs.len());
+        let query_deets = format!("Querying starting from block #{}\nNew logs retrieved: {}", block_num, &*logs.len().to_string());
 
         // You don't need a token when you are only dealing with webhooks.
         let http = Http::new("");
         let webhook = Webhook::from_url(&http, &webhook_url).await.expect("Bad webhook");
 
         webhook
-            .execute(&http, false, |w| w.content(["new logs retrieved: ", &*logs.len().to_string()].join("")).username("coder-reporter"))
+            .execute(&http, false, |w| w.content(&query_deets).username("toluca"))
             .await
             .expect("Could not execute webhook.");
 
