@@ -14,29 +14,19 @@ use hex_literal::hex;
 
 use tokio::time::Duration;
 
+use serenity::model::channel::Embed;
+
 mod github_data;
 mod discord;
 mod config;
+mod ethereum;
 
-#[get("/?<code>")]
-async fn index(code: &str) -> std::string::String  {
-    println!("code: {}", code);
-    // You don't need a token when you are only dealing with webhooks.
-    // let http = Http::new("");
-    // let webhook_url = env::var("DISCORD_WEBHOOK").expect("Expected DISCORD_WEBHOOK in the environment");
-    // let webhook = Webhook::from_url(&http, &webhook_url).await.expect("Bad webhook");
-
-    // webhook
-    //     .execute(&http, false, |w| w.content(["received code and sent to discord: ", code].join("")).username("toluca"))
-    //     .await
-    //     .expect("Could not execute webhook.");
-
-    ["received code and sent to discord: ", code].join("")
-}
+use crate::ethereum::parse_log_entry;
 
 #[post("/", format = "application/json", data = "<data>")]
 async fn github_webhook_recv(data: Data<'_>) -> Option<&str>  {
     let string = data.open(128.kibibytes()).into_string().await.ok()?;
+    let config = envy::from_env::<config::Config>().expect("DISCORD_WEBHOOK, DISCORD_TOKEN and ETHEREUM_NODE must be supplied");
 
     let v: Value = serde_json::from_str(&*string.value).ok()?;
 
@@ -65,19 +55,13 @@ async fn github_webhook_recv(data: Data<'_>) -> Option<&str>  {
             let pull_request_url = v["pull_request"]["html_url"].to_string();
             let trimmed_url = &pull_request_url[1..pull_request_url.len()-1];
 
-            // let http = Http::new("");
-            // let webhook_url = env::var("DISCORD_WEBHOOK").expect("Expected DISCORD_WEBHOOK in the environment");
-            // let webhook = Webhook::from_url(&http, &webhook_url).await.expect("Bad webhook");
+            let embed = Embed::fake(|e| e
+                .title(pull_request_title)
+                .description(pull_request_description)
+                .url(&trimmed_url));
 
-            // let embed = Embed::fake(|e| e
-            //     .title(pull_request_title)
-            //     .description(pull_request_description)
-            //     .url(&trimmed_url));
+            discord::discord_webhook_post(&config, pull_request_content, Some(embed)).await;
 
-            // webhook
-            //     .execute(&http, false, |w| w.content(pull_request_content).embeds(vec![embed]).username("github"))
-            //     .await
-            //     .expect("Could not execute webhook.");
         } else {
             println!("dunno how to handle");
         }
@@ -95,7 +79,7 @@ async fn poll_ethereum(config: &config::Config) -> web3::Result<()>{
 
     println!("Polling period set to {}", sleep_time);
 
-    let _ = discord::discord_webhook_post(&config, format!("Starting Toluca.\nPolling period set to {}", sleep_time), None).await;
+    discord::discord_webhook_post(&config, format!("Starting Toluca.\nPolling period set to {}", sleep_time), None).await;
 
     let address_coderdao = "0x346787C77d6720db91Ce140120457e20Fdd4D02c";
 
@@ -125,24 +109,11 @@ async fn poll_ethereum(config: &config::Config) -> web3::Result<()>{
             .build();
 
         let filter = web3.eth_filter().create_logs_filter(filter).await?;
-
         let logs = filter.logs().await?;
-
-        println!("got logs: {}", logs.len());
         let query_deets = format!("Querying starting from block #{}\nNew logs retrieved: {}", block_num, &*logs.len().to_string());
 
-        // You don't need a token when you are only dealing with webhooks.
-        // let http = Http::new("");
-        // let webhook = Webhook::from_url(&http, &webhook_url).await.expect("Bad webhook");
-
-        // webhook
-        //     .execute(&http, false, |w| w.content(&query_deets).username("toluca"))
-        //     .await
-        //     .expect("Could not execute webhook.");
-
         for log in logs {
-            let serialized_log = serde_json::to_string(&log).unwrap();
-            println!("> log: {}", serialized_log);
+            parse_log_entry(&log);
         }
 
         block_num = web3.eth().block_number().await?;
