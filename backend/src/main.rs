@@ -4,7 +4,7 @@ extern crate web3;
 
 // use rocket::serde::{json::Json};
 use rocket::data::{Data, ToByteUnit};
-
+use rocket::serde::Deserialize;
 use serde_json::Value;
 
 mod github_data;
@@ -57,28 +57,42 @@ impl EventHandler for Handler {
     }
 }
 
-// async fn discord_bot() {
-//     // Configure the client with your Discord bot token in the environment.
-//     let token = env::var("DISCORD_TOKEN").expect("Expected DISCORD_TOKEN in the environment");
-//     // Set gateway intents, which decides what events the bot will be notified about
-//     let intents = GatewayIntents::GUILD_MESSAGES
-//         | GatewayIntents::DIRECT_MESSAGES
-//         | GatewayIntents::MESSAGE_CONTENT;
+async fn discord_bot(config: Config) {
+    // Configure the client with your Discord bot token in the environment.
+    let token = config.discord_token;
+    // Set gateway intents, which decides what events the bot will be notified about
+    let intents = GatewayIntents::GUILD_MESSAGES
+        | GatewayIntents::DIRECT_MESSAGES
+        | GatewayIntents::MESSAGE_CONTENT;
 
-//     // Create a new instance of the Client, logging in as a bot. This will
-//     // automatically prepend your bot token with "Bot ", which is a requirement
-//     // by Discord for bot users.
-//     let mut client =
-//         Client::builder(&token, intents).event_handler(Handler).await.expect("Err creating client");
+    // Create a new instance of the Client, logging in as a bot. This will
+    // automatically prepend your bot token with "Bot ", which is a requirement
+    // by Discord for bot users.
+    let mut client =
+        Client::builder(&token, intents).event_handler(Handler).await.expect("Err creating client");
 
-//     // Finally, start a single shard, and start listening to events.
-//     //
-//     // Shards will automatically attempt to reconnect, and will perform
-//     // exponential backoff until it reconnects.
-//     if let Err(why) = client.start().await {
-//         println!("Discord bot error: {:?}", why);
-//     }
-// }
+    // Finally, start a single shard, and start listening to events.
+    //
+    // Shards will automatically attempt to reconnect, and will perform
+    // exponential backoff until it reconnects.
+    if let Err(why) = client.start().await {
+        println!("Discord bot error: {:?}", why);
+    }
+}
+
+/// provides default value for zoom if ZOOM env var is not set
+fn default_poll_period() -> u32 {
+    3600000
+}
+  
+#[derive(Deserialize, Debug)]
+struct Config {
+    #[serde(default="default_poll_period")]
+    poll_period: u32,
+    discord_webhook: String,
+    discord_token: String,
+    ethereum_node: String
+}
 
 #[get("/?<code>")]
 async fn index(code: &str) -> std::string::String  {
@@ -150,19 +164,18 @@ async fn github_webhook_recv(data: Data<'_>) -> Option<&str>  {
     Some("{ \"status\": \"ok\" }")
 }
 
-async fn poll_ethereum() -> web3::Result<()>{
-    let webhook_url = env::var("DISCORD_WEBHOOK").expect("Expected DISCORD_WEBHOOK in the environment");
-    let eth_url = env::var("ETHEREUM_NODE").expect("Expected ETHEREUM_NODE in the environment");
-    let poll_period = env::var("POLL_PERIOD").unwrap_or(3600000.to_string());
-    let sleep_time = poll_period.parse::<u64>().expect("Sleep time not a u64");
+async fn poll_ethereum(config: Config) -> web3::Result<()>{
+    let webhook_url = config.discord_webhook;
+    let eth_url = config.ethereum_node;
+    let sleep_time = config.poll_period;
 
-    println!("Polling period set to {}", poll_period);
+    println!("Polling period set to {}", sleep_time);
 
     let http = Http::new("");
     let webhook = Webhook::from_url(&http, &webhook_url).await.expect("Bad webhook");
 
     webhook
-        .execute(&http, false, |w| w.content(format!("Starting Toluca.\nPolling period set to {}", poll_period)).username("toluca"))
+        .execute(&http, false, |w| w.content(format!("Starting Toluca.\nPolling period set to {}", sleep_time)).username("toluca"))
         .await
         .expect("Could not execute webhook.");
 
@@ -215,23 +228,20 @@ async fn poll_ethereum() -> web3::Result<()>{
         }
 
         block_num = web3.eth().block_number().await?;
-        tokio::time::sleep(Duration::from_millis(sleep_time)).await;
+        tokio::time::sleep(Duration::from_millis(sleep_time.into())).await;
     }
 }
 
 #[launch]
 fn rocket() -> _ {
-    // Configure the client with your Discord bot token in the environment.
-    env::var("DISCORD_TOKEN").expect("Expected DISCORD_TOKEN in the environment");
-    env::var("DISCORD_WEBHOOK").expect("Expected DISCORD_WEBHOOK in the environment");
-    env::var("ETHEREUM_NODE").expect("Expected ETHEREUM_NODE in the environment");
-
+    let config = envy::from_env::<Config>().expect("DISCORD_WEBHOOK, DISCORD_TOKEN and ETHEREUM_NODE must be supplied");
+    println!("{:#?}", config);
     // tokio::spawn(async move {
-    //     discord_bot().await;
+    //     discord_bot(config).await;
     // });
 
     tokio::spawn(async move {
-        if let Err(why) = poll_ethereum().await {
+        if let Err(why) = poll_ethereum(config).await {
             println!("Error polling Ethereum: {:?}", why);
         }
     });
