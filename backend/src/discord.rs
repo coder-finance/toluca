@@ -4,7 +4,6 @@ use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 use serenity::http::Http;
 use serenity::model::webhook::Webhook;
-use serenity::model::channel::Embed;
 
 use crate::config::Config;
 
