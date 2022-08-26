@@ -14,6 +14,7 @@ mod discord;
 mod config;
 mod ethereum;
 mod routes;
+mod fastabi;
 
 use crate::ethereum::parse_log_entry;
 
