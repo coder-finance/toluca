@@ -30,18 +30,18 @@ fn decode_payload_proposal_created(log: &Log) {
     println!("decoded] {}, {}, {}", unwrapped[6], unwrapped[7], unwrapped[8]);
 }
 
-fn parse_log_entry(log: &Log) {
-    // println!("TODO: decoding log");
-    // println!("TODO: find contribute intent related to proposal");
-    // println!("TODO: check verification is done");
-    // println!("TODO: check merge is done");
-    // println!("TODO: check payout is already done");
-    // println!("TODO: if not already paid and confirmed, payout!");
-    // println!("TODO: log and save the receipt");
-    // let serialized_log = serde_json::to_string(&log).unwrap();
-    decode_payload_proposal_created(&log);
-    // println!("> log: {}", serialized_log);
-}
+// fn parse_log_entry(log: &Log) {
+//     // println!("TODO: decoding log");
+//     // println!("TODO: find contribute intent related to proposal");
+//     // println!("TODO: check verification is done");
+//     // println!("TODO: check merge is done");
+//     // println!("TODO: check payout is already done");
+//     // println!("TODO: if not already paid and confirmed, payout!");
+//     // println!("TODO: log and save the receipt");
+//     // let serialized_log = serde_json::to_string(&log).unwrap();
+//     decode_payload_proposal_created(&log);
+//     // println!("> log: {}", serialized_log);
+// }
 
 
 async fn poll_and_parse_event(config: &Config,
@@ -96,7 +96,7 @@ pub async fn poll_ethereum(config: &Config) -> web3::Result<()>{
         // ProposalCreated : look this up in etherscan https://ropsten.etherscan.io/address/0x346787C77d6720db91Ce140120457e20Fdd4D02c#events
         // alternatively: Run it on https://emn178.github.io/online-tools/keccak_256.html
         // in this case: ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)
-        poll_and_parse_event(&config, &web3, U64::from(0), hex!("7d84a6263ae0d98d3329bd7b46bb4e8d6f98cd35a7adb45c274c8b7fd5ebd5e0").into(), parse_log_entry).await;
+        poll_and_parse_event(&config, &web3, U64::from(0), hex!("7d84a6263ae0d98d3329bd7b46bb4e8d6f98cd35a7adb45c274c8b7fd5ebd5e0").into(), decode_payload_proposal_created).await;
         block_num = web3.eth().block_number().await?;
         tokio::time::sleep(Duration::from_millis(sleep_time.into())).await;
     }
