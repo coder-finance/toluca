@@ -25,12 +25,11 @@ use crate::ethereum::parse_log_entry;
 async fn poll_ethereum(config: &config::Config) -> web3::Result<()>{
     let eth_url = &config.ethereum_node;
     let sleep_time = config.poll_period;
+    let address_dao = &config.address_dao;
 
     println!("Polling period set to {}", sleep_time);
 
     discord::discord_webhook_post(&config, format!("Starting Toluca.\nPolling period set to {}", sleep_time), None).await;
-
-    let address_coderdao = "0x346787C77d6720db91Ce140120457e20Fdd4D02c";
 
     // ProposalCreated : look this up in etherscan https://ropsten.etherscan.io/address/0x346787C77d6720db91Ce140120457e20Fdd4D02c#events
     // alternatively: Run it on https://emn178.github.io/online-tools/keccak_256.html
@@ -49,7 +48,7 @@ async fn poll_ethereum(config: &config::Config) -> web3::Result<()>{
         let filter = web3::types::FilterBuilder::default()
             .from_block(BlockNumber::Number(U64::from(0)))
             // .from_block(BlockNumber::Number(block_num))
-            .address(vec![Address::from_str(address_coderdao).unwrap()])
+            .address(vec![Address::from_str(address_dao).unwrap()])
             .topics(
                 Some(vec![
                     event_hash]),

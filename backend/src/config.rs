@@ -11,5 +11,6 @@ pub struct Config {
     pub poll_period: u32,
     pub discord_webhook: String,
     pub discord_token: String,
+    pub address_dao: String,
     pub ethereum_node: String
 }
