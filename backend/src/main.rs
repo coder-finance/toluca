@@ -9,12 +9,16 @@ use hex_literal::hex;
 
 use tokio::time::Duration;
 
+#[cfg(debug_assertions)]
+extern crate dotenv;
+#[cfg(debug_assertions)]
+use dotenv::dotenv;
+
 mod github_data;
 mod discord;
 mod config;
 mod ethereum;
 mod routes;
-mod fastabi;
 
 use crate::ethereum::parse_log_entry;
 
@@ -28,7 +32,9 @@ async fn poll_ethereum(config: &config::Config) -> web3::Result<()>{
 
     let address_coderdao = "0x346787C77d6720db91Ce140120457e20Fdd4D02c";
 
-    // look this up in etherscan https://ropsten.etherscan.io/address/0x346787C77d6720db91Ce140120457e20Fdd4D02c#events
+    // ProposalCreated : look this up in etherscan https://ropsten.etherscan.io/address/0x346787C77d6720db91Ce140120457e20Fdd4D02c#events
+    // alternatively: Run it on https://emn178.github.io/online-tools/keccak_256.html
+    // in this case: ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)
     let event_hash = hex!("7d84a6263ae0d98d3329bd7b46bb4e8d6f98cd35a7adb45c274c8b7fd5ebd5e0").into(); 
 
     let transport = web3::transports::Http::new(&eth_url)?;
@@ -69,6 +75,9 @@ async fn poll_ethereum(config: &config::Config) -> web3::Result<()>{
 
 #[launch]
 fn rocket() -> _ {
+    #[cfg(debug_assertions)]
+    dotenv().ok();
+
     let config = envy::from_env::<config::Config>().expect("DISCORD_WEBHOOK, DISCORD_TOKEN and ETHEREUM_NODE must be supplied");
     println!("{:#?}", config);
     // tokio::spawn(async move {
