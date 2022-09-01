@@ -18,7 +18,7 @@ async function main() {
   console.log('DAOToken deployed to:', daoTokenInstance.address);
   console.log('Symbol: ', await daoTokenInstance.symbol());
 
-  const daoInstance = await upgrades.deployProxy(DAO, [daoTokenInstance.address], { kind: 'uups', initializer: 'initialize' });
+  const daoInstance = await upgrades.deployProxy(DAO, [daoTokenInstance.address, 1], { kind: 'uups', initializer: 'initialize' });
   await daoInstance.deployed();
 
   console.log('DAO deployed to:', daoInstance.address);
