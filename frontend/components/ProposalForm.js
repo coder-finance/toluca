@@ -74,6 +74,8 @@ export default function () {
       [daoTokenAddress],
       [0],
       [transferCalldata],
+      proposal.votingDelay,
+      proposal.votingPeriod,
       `${proposal.title} -WITH- ${ipfsHash}`
     );
     return response;
@@ -196,6 +198,32 @@ export default function () {
                 <option>Bug Fix</option>
                 <option>Improvement</option>
               </Select>
+            </Box>
+            <Box width={1 / 2} px={2}>
+              <Label htmlFor="title">Voting Delay</Label>
+              <Input
+                id="votingDelay"
+                name="votingDelay"
+                value="1"
+                type="number"
+                min="1"
+                max="42069"
+                {...register('votingDelay', { required: true })}
+              />
+              {errors.title && <span>Voting Delay is required</span>}
+            </Box>
+            <Box width={1 / 2} px={2}>
+              <Label htmlFor="title">Voting Period</Label>
+              <Input
+                id="votingPeriod"
+                name="votingPeriod"
+                value="42069"
+                type="number"
+                min="10"
+                max="42069"
+                {...register('votingPeriod', { required: true })}
+              />
+              {errors.title && <span>Voting Period is required</span>}
             </Box>
           </Flex>
           <ReactMarkdown>{markdownBody}</ReactMarkdown>

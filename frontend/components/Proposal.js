@@ -44,8 +44,8 @@ export default function ({ proposal, previewOnly }) {
       ipfsLookup(proposal.image, setProposalIPFSPath);
     };
     if (proposal) {
-      console.log("IPFS lookup of a proposal", proposal);
-      ipfsLookupFn(proposal);
+      console.log("IPFS lookup of a proposal (skipped for now, see comment)", proposal);
+      // ipfsLookupFn(proposal); // TODO: this causes a TypeError: Failed to fetch on client side due to CORS when local dev, temporarily commenting it out
     }
   }, [proposalIPFSPath]);
 

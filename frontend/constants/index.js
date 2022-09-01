@@ -41,5 +41,5 @@ export default gallery;
 
 export const NETWORK_ID_SUPPORTED = [3];
 
-export const daoTokenAddress = '0x39C1b593eDCFE71bB553196E42a93399dC72B17C';
-export const daoAddress = '0x346787C77d6720db91Ce140120457e20Fdd4D02c';
+export const daoTokenAddress = '0xDBdCe90e2E657FC739556aE2449902Dd90b683c3';
+export const daoAddress = '0x2e6c64352006758Ea9f502E434F3c49747dDA771';
