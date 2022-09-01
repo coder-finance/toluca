@@ -21,11 +21,13 @@ async function main() {
   const filters = await coderDaoContract.filters.ProposalCreated();
   const logs = await coderDaoContract.queryFilter(filters, 0, "latest");
   const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
-  events.forEach(e => console.info(`[${events[0].args.proposalId.toString()}] ${events[0].args.description}`))
 
-  // latest state of proposal
-  const proposalInfo = await coderDaoContract.state(events[0].args.proposalId)
-
+  // latest state of proposals
+  events.map(async (e) => {
+    const proposalInfo = await coderDaoContract.state(events[0].args.proposalId);
+    console.info(`[${events[0].args.proposalId.toString()}] ${events[0].args.description}`)
+    console.info('state: ', proposalInfo);
+  });
 }
 
 // We recommend this pattern to be able to use async/await everywhere
