@@ -70,6 +70,7 @@ export default function () {
     const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
     const tokenContract = new Contract(daoTokenAddress, coderDAOTokenAbi, lib.getSigner());
     const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
+    console.error(981, transferCalldata)
     const response = await coderDaoContract.propose(
       [daoTokenAddress],
       [0],
@@ -204,7 +205,7 @@ export default function () {
               <Input
                 id="votingDelay"
                 name="votingDelay"
-                value="1"
+                defaultValue="1"
                 type="number"
                 min="1"
                 max="42069"
@@ -217,7 +218,7 @@ export default function () {
               <Input
                 id="votingPeriod"
                 name="votingPeriod"
-                value="42069"
+                defaultValue="10"
                 type="number"
                 min="10"
                 max="42069"

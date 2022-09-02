@@ -13,10 +13,12 @@ import { daoAddress } from '../constants';
 // TODO: replace with proper data
 import { SampleArticle, FullSample, PreviewSample } from './core/Article';
 
-import cryptoDoggyAbi from '../abis/CoderDAO.json';
+import coderDAOAbi from '../abis/CoderDAO.json';
 
 import { create as client, urlSource } from 'ipfs-http-client';
 import { shop, asset, ipfs as ipfsAddr } from '../constants';
+import { proposalStatus } from '../utils';
+
 const ipfs = client(ipfsAddr.host);
 
 const connection = new providers.InfuraProvider('ropsten');
@@ -33,7 +35,7 @@ const ipfsDownload = async (url) => {
 
 export default function ({ proposal, previewOnly }) {
   const [proposalIPFSPath, setProposalIPFSPath] = useState();
-  const [value, setValue] = useState();
+  const [proposalState, setProposalState] = useState();
   const { account, library } = useWeb3React();
 
   console.log("Proposal111:", proposal);
@@ -49,19 +51,19 @@ export default function ({ proposal, previewOnly }) {
     }
   }, [proposalIPFSPath]);
 
-  // useEffect(() => {
-  //   const ProposalRetrievalFn = async () => {
-  //     if (account) {
-  //       const lib = await library;
+  useEffect(() => {
+    const ProposalRetrievalFn = async () => {
+      if (account) {
+        const lib = await library;
 
-  //       // The Contract object
-  //       const coderDao = new Contract(daoAddress, cryptoDoggyAbi, connection);
-  //       const daoName = await coderDao.name();
-  //       setValue(daoName);
-  //     }
-  //   };
-  //   ProposalRetrievalFn();
-  // }, [account]);
+        // The Contract object
+        const coderDao = new Contract(daoAddress, coderDAOAbi, connection);
+        const state = await coderDao.state(proposal.id);
+        setProposalState(state);
+      }
+    };
+    ProposalRetrievalFn();
+  }, []);
 
   if (!proposal) return (<>Loading...</>);
 
@@ -84,7 +86,7 @@ export default function ({ proposal, previewOnly }) {
             {proposal.description}
           </Text>
           <Text fontSize={0}>
-            {value && `Ξ${value}`}
+            {proposalState && `Ξ${proposalStatus(parseInt(proposalState))}`}
           </Text>
         </Box>
 

@@ -24,13 +24,17 @@ function HomeGallery(props) {
     const filters = await coderDaoContract.filters.ProposalCreated();
     const logs = await coderDaoContract.queryFilter(filters, 0, 'latest');
     const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
+  
+    const proposals = events.map((e) => ({
+      id: e.args.proposalId.toString(),
+      description: e.args.description,
+      title: e.args.description,
+      image: 'QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B',
+      meta: `${e.args.proposalId.toString()} meta`
+    }));
 
     // latest state of proposal
-    // const proposalInfo = await coderDaoContract.state(events[0].args.proposalId)
-
-    setProposals(events.map((e) => ({
-      id: e.args.proposalId.toString(), description: e.args.description, title: e.args.description, image: 'QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B', meta: `${e.args.proposalId.toString()} meta`
-    })));
+    setProposals(proposals);
   };
 
   useEffect(() => {
