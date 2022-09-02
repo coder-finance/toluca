@@ -25,7 +25,7 @@ async function main() {
   // latest state of proposals
   events.map(async (e) => {
     const proposalInfo = await coderDaoContract.state(e.args.proposalId);
-    console.info(`[${e.args.proposalId.toString()}] ${e.args.description} - ${proposalInfo}`)
+    console.info(`[${e.args.proposalId.toHexString()}] ${e.args.description} - ${proposalInfo}`)
   });
 }
 
