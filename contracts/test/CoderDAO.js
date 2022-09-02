@@ -95,6 +95,8 @@ describe("CoderDAO", function () {
       const grantAmount = web3.utils.toWei('1');
       const transferCalldata = token_instance.interface.encodeFunctionData('transfer', [team.address, grantAmount]);
       
+      console.info(`transferCalldata: "${transferCalldata}"`);
+
       const proposalTx = await instance.propose(
           [token_instance.address],
           [0],
@@ -129,6 +131,7 @@ describe("CoderDAO", function () {
       assert.equal(proposalState, '1');      
       
       const descriptionHash = ethers.utils.id("Proposal #1: Give grant to team");
+      console.info(`descriptionHash: "${descriptionHash}"`);
       await moveBlocksHardhat(VOTING_DELAY + 1, 1);
       
       // Run proposal      
