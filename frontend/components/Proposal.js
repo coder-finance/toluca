@@ -39,6 +39,7 @@ export default function ({ proposal, previewOnly }) {
   const { account, library } = useWeb3React();
 
   console.log("Proposal111:", proposal);
+
   useEffect(() => {
     console.log("aaa")
     const ipfsLookupFn = async (proposal) => {
@@ -51,15 +52,16 @@ export default function ({ proposal, previewOnly }) {
     }
   }, [proposalIPFSPath]);
 
+  // Only gets called when previewing (client-side)
   useEffect(() => {
+    if (!previewOnly) return;
+
     const ProposalRetrievalFn = async () => {
       if (account) {
-        const lib = await library;
-
         // The Contract object
         const coderDao = new Contract(daoAddress, coderDAOAbi, connection);
         const state = await coderDao.state(proposal.id);
-        setProposalState(state);
+        setProposalState({ state });
       }
     };
     ProposalRetrievalFn();
@@ -89,7 +91,7 @@ export default function ({ proposal, previewOnly }) {
             {proposal.description}
           </Text>
           <Text fontSize={0}>
-            {proposalState && `Ξ${proposalStatus(parseInt(proposalState))}`}
+            State: {proposal && (proposal.state || proposalState) && `Ξ${proposalStatus(parseInt(proposal.state || proposalState.state))}`}
           </Text>
         </Box>
 

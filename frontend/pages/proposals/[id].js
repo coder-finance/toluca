@@ -34,7 +34,14 @@ export async function getStaticProps({ params }) {
       meta: `${e.args.proposalId.toString()} meta`
     })).filter((e) => e.id === params.id);
 
-    return proposals[0];
+    const proposalBase = proposals[0];
+    const state = await coderDao.state(proposalBase.id);
+
+    const proposal = {
+      ...proposalBase,
+      state,
+    }
+    return proposal;
   };
 
   const proposal = await ProposalRetrievalFn();
