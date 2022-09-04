@@ -80,6 +80,9 @@ export default function ({ proposal, previewOnly }) {
 
         <Box px={2}>
           <Heading as="h3">
+            {proposal.id}
+          </Heading>
+          <Heading as="h3">
             {proposal.title}
           </Heading>
           <Text fontSize={0}>
