@@ -26,7 +26,7 @@ function HomeGallery(props) {
     const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
   
     const proposals = events.map((e) => ({
-      id: e.args.proposalId.toString(),
+      id: e.args.proposalId.toHexString(),
       description: e.args.description,
       title: e.args.description,
       image: 'QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B',
