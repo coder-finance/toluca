@@ -36,11 +36,22 @@ export async function getStaticProps({ params }) {
 
     const proposalBase = proposals[0];
     const state = await coderDao.state(proposalBase.id);
+    const votes = await coderDao.proposalVotes(proposalBase.id);
+    const snapshot = await coderDao.proposalSnapshot(proposalBase.id);
+    const deadline = await coderDao.proposalDeadline(proposalBase.id);
 
     const proposal = {
       ...proposalBase,
       state,
+      votes: {
+        against: utils.formatEther(votes[0]),
+        for: utils.formatEther(votes[1]),
+        abstain: utils.formatEther(votes[2]),
+      },
+      deadline: deadline.toString(),
+      snapshot: snapshot.toString(),
     }
+
     return proposal;
   };
 

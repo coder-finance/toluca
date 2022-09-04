@@ -93,6 +93,13 @@ export default function ({ proposal, previewOnly }) {
           <Text fontSize={0}>
             State: {proposal && (proposal.state || proposalState) && `Ξ${proposalStatus(parseInt(proposal.state || proposalState.state))}`}
           </Text>
+          {proposal.votes && <Box>
+            <Text fontSize={0}>For: {proposal.votes.for}</Text>
+            <Text fontSize={0}>Against: {proposal.votes.against}</Text>
+            <Text fontSize={0}>Abstain: {proposal.votes.abstain}</Text>
+          </Box>}
+          {proposal.snapshot && <Text fontSize={0}>Snapshot: {proposal.snapshot}</Text>}
+          {proposal.deadline && <Text fontSize={0}>Deadline: {proposal.deadline}</Text>}
         </Box>
 
       </Card>
