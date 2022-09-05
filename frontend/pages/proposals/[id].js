@@ -1,14 +1,4 @@
-import { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  Image,
-  Heading,
-  Text
-} from 'rebass';
-
 import { Contract, providers, utils } from 'ethers';
-
 import Proposal from '../../components/Proposal'
 import { daoAddress, ipfs } from '../../constants';
 import coderDAOAbi from '../../abis/CoderDAO.json';

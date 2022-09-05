@@ -7,7 +7,8 @@ import {
   Heading,
   Text
 } from 'rebass';
-import { Web3ReactProvider, useWeb3React } from '@web3-react/core';
+import { Flex, Box as FlexBox } from 'reflexbox';
+import { useWeb3React } from '@web3-react/core';
 import ReactMarkdown from 'react-markdown';
 
 import { daoAddress } from '../constants';
@@ -17,9 +18,6 @@ import { proposalStatus } from '../utils';
 const connection = new providers.InfuraProvider('ropsten');
 
 const Content = ({ content }) => (<Box px={2}>
-  <Text fontSize={0}>Bounty: {content.bounty}</Text>
-  <Text fontSize={0}>Category: {content.category}</Text>
-  <Text fontSize={0}>Initiator: {content.initiator}</Text>
   <ReactMarkdown>{content.body}</ReactMarkdown>
 </Box>);
 
@@ -45,25 +43,43 @@ const PreviewBox = ({ proposal, proposalState }) => (
 );
 
 const FullView = ({ proposal, proposalState }) => (
-  <Box px={0}>
-    <Heading as="h1">
-      {proposal.title}
-    </Heading>
-    <Text fontSize="2">
-      {proposal.id}
-    </Text>
-    <Text fontSize={0}>
-      State: {proposal && (proposal.state || proposalState) && `Ξ${proposalStatus(parseInt(proposal.state || proposalState.state))}`}
-    </Text>
-    {proposal.votes && <Box>
-      <Text fontSize={0}>For: {proposal.votes.for}</Text>
-      <Text fontSize={0}>Against: {proposal.votes.against}</Text>
-      <Text fontSize={0}>Abstain: {proposal.votes.abstain}</Text>
-    </Box>}
-    {proposal.snapshot && <Text fontSize={0}>Snapshot: {proposal.snapshot}</Text>}
-    {proposal.deadline && <Text fontSize={0}>Deadline: {proposal.deadline}</Text>}
-    {proposal.content && <Content content={proposal.content}/>}
-  </Box>
+  <>
+    <Flex>
+      <FlexBox width={[1/2]} p={1}>
+        <Card>
+          <Heading as="h1">
+            {proposal.title}
+          </Heading>
+          <Text fontSize="2">
+            {proposal.id}
+          </Text>
+          <Text fontSize={0}>
+            State: {proposal && (proposal.state || proposalState) && `Ξ${proposalStatus(parseInt(proposal.state || proposalState.state))}`}
+          </Text>
+          {proposal.snapshot && <Text fontSize={0}>Snapshot: {proposal.snapshot}</Text>}
+          {proposal.deadline && <Text fontSize={0}>Deadline: {proposal.deadline}</Text>}
+        </Card>
+      </FlexBox>
+      <FlexBox width={[1/2]} p={1}>
+        <Card>
+        <Box
+          >
+            {proposal.votes && <Box>
+              <Text fontSize={0}>For: {proposal.votes.for}</Text>
+              <Text fontSize={0}>Against: {proposal.votes.against}</Text>
+              <Text fontSize={0}>Abstain: {proposal.votes.abstain}</Text>
+              <Text fontSize={0}>Bounty: {proposal.content.bounty}</Text>
+              <Text fontSize={0}>Category: {proposal.content.category}</Text>
+              <Text fontSize={0}>Initiator: {proposal.content.initiator}</Text>
+            </Box>}
+          </Box>
+        </Card>
+      </FlexBox>
+    </Flex>
+    <article>
+      {proposal.content && <Content content={proposal.content}/>}
+    </article>
+    </>
 );
 
 export default function ({ proposal, previewOnly }) {
