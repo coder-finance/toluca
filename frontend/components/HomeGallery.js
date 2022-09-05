@@ -25,13 +25,22 @@ function HomeGallery(props) {
     const logs = await coderDaoContract.queryFilter(filters, 0, 'latest');
     const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
   
-    const proposals = events.map((e) => ({
-      id: e.args.proposalId.toHexString(),
-      description: e.args.description,
-      title: e.args.description,
-      image: 'QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B',
-      meta: `${e.args.proposalId.toString()} meta`
-    }));
+    // console.error('title:', title)
+    const proposals = events.map((e) => { 
+      // TODO: fix this once we update the contract
+      const indexSeparator = e.args.description.indexOf(' -WITH- ');
+      const title = e.args.description.substring(0, indexSeparator);
+      const hash = e.args.description.substring(indexSeparator + 8);
+
+      return ({
+        id: e.args.proposalId.toHexString(),
+        description: e.args.description,
+        title,
+        hash,
+        image: 'QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B',
+        meta: `${e.args.proposalId.toString()} meta`
+      })
+    });
 
     // latest state of proposal
     setProposals(proposals);

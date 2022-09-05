@@ -8,10 +8,9 @@ import {
 } from 'rebass';
 
 import { Contract, providers, utils } from 'ethers';
-import { useWeb3React } from '@web3-react/core'
 
 import Proposal from '../../components/Proposal'
-import { daoAddress } from '../../constants';
+import { daoAddress, ipfs as ipfsAddr } from '../../constants';
 import coderDAOAbi from '../../abis/CoderDAO.json';
 
 const connection = new providers.InfuraProvider('ropsten');
@@ -26,19 +25,33 @@ export async function getStaticProps({ params }) {
     const logs = await coderDao.queryFilter(filters, 0, 'latest');
     const events = logs.map((log) => coderDao.interface.parseLog(log));
   
-    const proposals = events.map((e) => ({
-      id: e.args.proposalId.toHexString(),
-      description: e.args.description,
-      title: e.args.description,
-      image: 'QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B',
-      meta: `${e.args.proposalId.toString()} meta`
-    })).filter((e) => e.id === params.id);
+    const proposals = events.map((e) => { 
+      // TODO: fix this once we update the contract
+      const indexSeparator = e.args.description.indexOf(' -WITH- ');
+      console.error('index@:', indexSeparator);
+      const title = e.args.description.substring(0, indexSeparator);
+      console.error('title:', title);
+      const hash = e.args.description.substring(indexSeparator + 8);
+      console.error('hash:', hash);
+
+      return ({
+        id: e.args.proposalId.toHexString(),
+        description: e.args.description,
+        title,
+        hash,
+        image: 'QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B',
+        meta: `${e.args.proposalId.toString()} meta`
+      })
+    }).filter((e) => e.id === params.id);
 
     const proposalBase = proposals[0];
     const state = await coderDao.state(proposalBase.id);
     const votes = await coderDao.proposalVotes(proposalBase.id);
     const snapshot = await coderDao.proposalSnapshot(proposalBase.id);
     const deadline = await coderDao.proposalDeadline(proposalBase.id);
+
+    const res = await fetch(`http://127.0.0.1:7090/ipfs/${proposalBase.hash}`);
+    const content = await res.json();
 
     const proposal = {
       ...proposalBase,
@@ -50,6 +63,7 @@ export async function getStaticProps({ params }) {
       },
       deadline: deadline.toString(),
       snapshot: snapshot.toString(),
+      content,
     }
 
     return proposal;
