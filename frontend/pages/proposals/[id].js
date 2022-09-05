@@ -10,7 +10,7 @@ import {
 import { Contract, providers, utils } from 'ethers';
 
 import Proposal from '../../components/Proposal'
-import { daoAddress, ipfs as ipfsAddr } from '../../constants';
+import { daoAddress, ipfs } from '../../constants';
 import coderDAOAbi from '../../abis/CoderDAO.json';
 
 const connection = new providers.InfuraProvider('ropsten');
@@ -50,7 +50,7 @@ export async function getStaticProps({ params }) {
     const snapshot = await coderDao.proposalSnapshot(proposalBase.id);
     const deadline = await coderDao.proposalDeadline(proposalBase.id);
 
-    const res = await fetch(`http://127.0.0.1:7090/ipfs/${proposalBase.hash}`);
+    const res = await fetch(`${ipfs.httpGateway}${proposalBase.hash}`);
     const content = await res.json();
 
     const proposal = {
@@ -84,18 +84,8 @@ export async function getStaticPaths() {
 }
 
 function ProposalDetails(props) {
-  // Pass post data to the page via props
-  // return {
-  //   props: {
-  //     proposal: {
-  //       id: proposal.args.proposalId.toString(), description: proposal.args.description, title: proposal.args.description, image: 'QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B', meta: `${proposal.args.proposalId.toString()} meta`
-  //     }
-  //   }
-  // }
   return (
-    <Box p={3}>
-      <Proposal proposal={props.proposal} />
-    </Box>
+    <Proposal proposal={props.proposal} />
   );
 }
 

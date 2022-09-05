@@ -26,7 +26,8 @@ export const shop = {
 };
 
 export const ipfs = {
-  host: 'http://127.0.0.1:5001'
+  host: 'http://127.0.0.1:5001',
+  httpGateway: 'http://127.0.0.1:7090/ipfs/',
 };
 
 export const proposalStub = {

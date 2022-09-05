@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import {
-  Heading, Text, Link, Button
+  Box,
+  Card,
+  Link,
 } from 'rebass';
 import { Flex, Box as FlexBox } from 'reflexbox';
 import { useWeb3React } from '@web3-react/core';
@@ -25,7 +27,6 @@ function HomeGallery(props) {
     const logs = await coderDaoContract.queryFilter(filters, 0, 'latest');
     const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
   
-    // console.error('title:', title)
     const proposals = events.map((e) => { 
       // TODO: fix this once we update the contract
       const indexSeparator = e.args.description.indexOf(' -WITH- ');
@@ -56,7 +57,17 @@ function HomeGallery(props) {
         && proposals.map((proposal, i) => (
           <FlexBox key={i} width={[1, 1 / 2]} p={3}>
             <Link href={`/proposals/${proposal.id}`}>
-              <Proposal proposal={proposal} previewOnly />
+              <Box>
+                <Card
+                  sx={{
+                    p: 1,
+                    borderRadius: 2,
+                    boxShadow: '0 0 16px rgba(0, 0, 0, .25)',
+                  }}
+                >
+                  <Proposal proposal={proposal} previewOnly />
+                </Card>
+              </Box>
             </Link>
           </FlexBox>
         ))}

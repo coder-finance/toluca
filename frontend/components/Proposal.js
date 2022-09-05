@@ -23,10 +23,52 @@ const Content = ({ content }) => (<Box px={2}>
   <ReactMarkdown>{content.body}</ReactMarkdown>
 </Box>);
 
+const PreviewBox = ({ proposal, proposalState }) => (
+  <Box px={0}>
+    <Heading as="h1">
+      {proposal.title}
+    </Heading>
+    <Text fontSize="2">
+      {proposal.id}
+    </Text>
+    <Text fontSize={0}>
+      State: {proposal && (proposal.state || proposalState) && `Ξ${proposalStatus(parseInt(proposal.state || proposalState.state))}`}
+    </Text>
+    {proposal.votes && <Box>
+      <Text fontSize={0}>For: {proposal.votes.for}</Text>
+      <Text fontSize={0}>Against: {proposal.votes.against}</Text>
+      <Text fontSize={0}>Abstain: {proposal.votes.abstain}</Text>
+    </Box>}
+    {proposal.snapshot && <Text fontSize={0}>Snapshot: {proposal.snapshot}</Text>}
+    {proposal.deadline && <Text fontSize={0}>Deadline: {proposal.deadline}</Text>}
+  </Box>
+);
+
+const FullView = ({ proposal, proposalState }) => (
+  <Box px={0}>
+    <Heading as="h1">
+      {proposal.title}
+    </Heading>
+    <Text fontSize="2">
+      {proposal.id}
+    </Text>
+    <Text fontSize={0}>
+      State: {proposal && (proposal.state || proposalState) && `Ξ${proposalStatus(parseInt(proposal.state || proposalState.state))}`}
+    </Text>
+    {proposal.votes && <Box>
+      <Text fontSize={0}>For: {proposal.votes.for}</Text>
+      <Text fontSize={0}>Against: {proposal.votes.against}</Text>
+      <Text fontSize={0}>Abstain: {proposal.votes.abstain}</Text>
+    </Box>}
+    {proposal.snapshot && <Text fontSize={0}>Snapshot: {proposal.snapshot}</Text>}
+    {proposal.deadline && <Text fontSize={0}>Deadline: {proposal.deadline}</Text>}
+    {proposal.content && <Content content={proposal.content}/>}
+  </Box>
+);
+
 export default function ({ proposal, previewOnly }) {
-  const [proposalIPFSPath, setProposalIPFSPath] = useState();
   const [proposalState, setProposalState] = useState();
-  const { account, library } = useWeb3React();
+  const { account } = useWeb3React();
 
   // Only gets called when previewing (client-side)
   useEffect(() => {
@@ -45,38 +87,7 @@ export default function ({ proposal, previewOnly }) {
 
   if (!proposal) return (<>Loading...</>);
 
-  return (
-    <Box>
-      <Card
-        sx={{
-          p: 1,
-          borderRadius: 2,
-          boxShadow: '0 0 16px rgba(0, 0, 0, .25)',
-        }}
-      >
-        {/* <Image src={proposalIPFSPath} style={{ maxHeight: '500px' }} /> */}
-
-        <Box px={2}>
-          <Heading as="h3">
-            {proposal.title}
-          </Heading>
-          <Text fontSize="2">
-            {proposal.id}
-          </Text>
-          <Text fontSize={0}>
-            State: {proposal && (proposal.state || proposalState) && `Ξ${proposalStatus(parseInt(proposal.state || proposalState.state))}`}
-          </Text>
-          {proposal.votes && <Box>
-            <Text fontSize={0}>For: {proposal.votes.for}</Text>
-            <Text fontSize={0}>Against: {proposal.votes.against}</Text>
-            <Text fontSize={0}>Abstain: {proposal.votes.abstain}</Text>
-          </Box>}
-          {proposal.snapshot && <Text fontSize={0}>Snapshot: {proposal.snapshot}</Text>}
-          {proposal.deadline && <Text fontSize={0}>Deadline: {proposal.deadline}</Text>}
-          {!previewOnly && proposal.content && <Content content={proposal.content}/>}
-        </Box>
-
-      </Card>
-    </Box>
-  );
+  return previewOnly ?
+    <PreviewBox proposal={proposal} proposalState={proposalState} /> :
+    <FullView proposal={proposal} proposalState={proposalState} />;
 }
