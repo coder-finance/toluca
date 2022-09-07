@@ -18,11 +18,8 @@ export async function getStaticProps({ params }) {
     const proposals = events.map((e) => { 
       // TODO: fix this once we update the contract
       const indexSeparator = e.args.description.indexOf(' -WITH- ');
-      console.error('index@:', indexSeparator);
       const title = e.args.description.substring(0, indexSeparator);
-      console.error('title:', title);
       const hash = e.args.description.substring(indexSeparator + 8);
-      console.error('hash:', hash);
 
       return ({
         id: e.args.proposalId.toHexString(),

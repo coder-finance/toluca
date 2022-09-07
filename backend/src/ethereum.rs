@@ -36,7 +36,7 @@ fn decode_payload_proposal_voted_on(log: &Log) {
     let decoded = decode(&[
         ParamType::Address,                                 // voter
         ParamType::Uint(256),                               // proposalId
-        ParamType::Uint(256),                               // support
+        ParamType::Uint(8),                                 // support
         ParamType::Uint(256),                               // weight
         ParamType::String                                   // reason
         ], &buf);
@@ -56,20 +56,30 @@ fn decode_payload_proposal_executed(log: &Log) {
     println!("[ProposalExecuted] 0x{}", unwrapped[0]);
 }
 
-// fn parse_log_entry(log: &Log) {
-//     // println!("TODO: decoding log");
-//     // println!("TODO: find contribute intent related to proposal");
-//     // println!("TODO: check verification is done");
-//     // println!("TODO: check merge is done");
-//     // println!("TODO: check payout is already done");
-//     // println!("TODO: if not already paid and confirmed, payout!");
-//     // println!("TODO: log and save the receipt");
-//     // let serialized_log = serde_json::to_string(&log).unwrap();
-//     decode_payload_proposal_created(&log);
-//     // println!("> log: {}", serialized_log);
-// }
+fn decode_payload_proposal_verified(log: &Log) {
+    let buf: &Vec<u8> = &log.data.0;
 
+    let decoded = decode(&[
+        ParamType::Uint(256),                               // proposalId
+        ], &buf);
+    let unwrapped = decoded.unwrap();
 
+    println!("[ProposalVerified] 0x{}", unwrapped[0]);
+}
+
+fn decode_payload_proposal_merged(log: &Log) {
+    let buf: &Vec<u8> = &log.data.0;
+
+    let decoded = decode(&[
+        ParamType::Uint(256),                               // proposalId
+        ], &buf);
+    let unwrapped = decoded.unwrap();
+
+    println!("[ProposalMerged] 0x{}", unwrapped[0]);
+    // TODO: payout what is promised
+}
+
+// TODO: support multiple event hashes
 async fn poll_and_parse_event(config: &Config,
     web3: &web3::Web3<Http>,
     from_block: U64,
