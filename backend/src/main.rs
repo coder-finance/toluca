@@ -24,11 +24,11 @@ fn rocket() -> _ {
     //     discord_bot(config).await;
     // });
 
-    tokio::spawn(async move {
-        if let Err(why) = poll_ethereum(&config).await {
-            println!("Error polling Ethereum: {:?}", why);
-        }
-    });
+    // tokio::spawn(async move {
+    //     if let Err(why) = poll_ethereum(&config).await {
+    //         println!("Error polling Ethereum: {:?}", why);
+    //     }
+    // });
 
     rocket::build()
         .mount("/", routes![routes::github_webhook_recv])

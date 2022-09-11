@@ -84,6 +84,7 @@ pub async fn github_webhook_recv(data: Data<'_>) -> Option<&str>  {
         }
     } else {
         println!("It's something else");
+        println!("{}", v);
     }
 
     Some("{ \"status\": \"ok\" }")
