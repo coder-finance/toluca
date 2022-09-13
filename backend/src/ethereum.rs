@@ -17,10 +17,9 @@ use hubcaps::JWTCredentials;
 use hubcaps::comments::CommentOptions;
 
 async fn decode_payload_proposal_created(logs: &Vec<Log>, pool: &ClientPool) {
+    println!("> ProposalCreated processing... {} entries", logs.len());
     for log in logs {
         let buf: &Vec<u8> = &log.data.0;
-        // let serialized_data = serde_json::to_string(&log.data.0).unwrap();
-        println!("> data: {:x?}", buf);
         let decoded = decode(&[
             ParamType::Uint(256),                               // proposalId
             ParamType::Address,                                 // proposer
@@ -35,7 +34,7 @@ async fn decode_payload_proposal_created(logs: &Vec<Log>, pool: &ClientPool) {
             ], &buf);
         let unwrapped = decoded.unwrap();
 
-        println!("decoded] {}, {}, {}", unwrapped[6], unwrapped[7], unwrapped[8]);
+        println!("decoded] {:?}, {:?}, {}, {}", unwrapped[6], unwrapped[7], unwrapped[8], unwrapped[9]);
     }
 }
 
@@ -186,15 +185,15 @@ pub async fn poll_ethereum(config: &Config) -> web3::Result<()>{
         // alternatively: Run it on https://emn178.github.io/online-tools/keccak_256.html
 
         // ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)
-        // let created_logs = poll_for_event(&config, &web3, U64::from(0), hex!("7d84a6263ae0d98d3329bd7b46bb4e8d6f98cd35a7adb45c274c8b7fd5ebd5e0").into()).await?;
-        // decode_payload_proposal_created(&created_logs, &pool).await;
+        let created_logs = poll_for_event(&config, &web3, U64::from(0), hex!("b88787ccad609a4d41058c8a0928927dd2516296c139d218d1e9131c2c219bd3").into()).await?;
+        decode_payload_proposal_created(&created_logs, &pool).await;
 
         // let executed_logs = poll_for_event(&config, &web3, U64::from(0), hex!("712ae1383f79ac853f8d882153778e0260ef8f03b504e2866e0593e04d2b291f").into()).await?;
         // decode_payload_proposal_executed(&executed_logs, &pool).await;
 
         // Verified(uint256)
-        let verified_logs = poll_for_event(&config, &web3, U64::from(0), hex!("051394e5cf50e28f5ee446d54e6b713eb0cb38f53eebc74eb30c2478c343c4ce").into()).await?;
-        decode_payload_proposal_verified(&verified_logs, &pool).await;
+        // let verified_logs = poll_for_event(&config, &web3, U64::from(0), hex!("051394e5cf50e28f5ee446d54e6b713eb0cb38f53eebc74eb30c2478c343c4ce").into()).await?;
+        // decode_payload_proposal_verified(&verified_logs, &pool).await;
 
         // ProposalState.Merged
         // let merged_logs = poll_for_event(&config, &web3, U64::from(0), hex!("711d5badedd96e81114c760c45969ad31fe3890c2328b885704576b297466354").into()).await?;
