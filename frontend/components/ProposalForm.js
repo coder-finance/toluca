@@ -28,10 +28,6 @@ import coderDAOTokenAbi from '../abis/CoderDAOToken.json';
 
 const connection = new providers.InfuraProvider('ropsten');
 
-const ipfsLookup = async (hash, setProposalIPFSPath) => {
-  setProposalIPFSPath(`http://localhost:8080/ipfs/${hash}`);
-};
-
 export default function () {
   const {
     register, handleSubmit, watch, formState: { errors }
@@ -70,14 +66,14 @@ export default function () {
     const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
     const tokenContract = new Contract(daoTokenAddress, coderDAOTokenAbi, lib.getSigner());
     const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
-    console.error(981, transferCalldata)
     const response = await coderDaoContract.propose(
       [daoTokenAddress],
       [0],
       [transferCalldata],
       proposal.votingDelay,
       proposal.votingPeriod,
-      `${proposal.title} -WITH- ${ipfsHash}`
+      proposal.title,
+      ipfsHash
     );
     return response;
   };
@@ -90,10 +86,8 @@ export default function () {
 
     const data = { ...formData, body: markdownBody };
     const res = await submitProposalToBackend(data);
-    console.error(7771, res);
 
     const txnResult = await submitProposalToBlockchain(data, res.ipfs);
-    console.error(9992, txnResult);
     setSubmittedProposal(res);
   };
 

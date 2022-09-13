@@ -30,7 +30,8 @@ async fn decode_payload_proposal_created(logs: &Vec<Log>, pool: &ClientPool) {
             ParamType::Bytes,                                   // calldatas
             ParamType::Uint(256),                               // startBlock
             ParamType::Uint(256),                               // endBlock
-            ParamType::String                                   // description
+            ParamType::String,                                  // description
+            ParamType::String                                   // ipfsCid
             ], &buf);
         let unwrapped = decoded.unwrap();
 
@@ -61,6 +62,7 @@ async fn decode_payload_proposal_executed(logs: &Vec<Log>, pool: &ClientPool) {
     
         let decoded = decode(&[
             ParamType::Uint(256),                               // proposalId
+            ParamType::String                                   // ipfsCid
             ], &buf);
         let unwrapped = decoded.unwrap();
 
@@ -76,21 +78,24 @@ async fn decode_payload_proposal_verified(logs: &Vec<Log>, pool: &ClientPool) {
 
         let decoded = decode(&[
             ParamType::Uint(256),                               // proposalId
+            ParamType::String                                   // ipfsCid
             ], &buf);
     
         let unwrapped = decoded.unwrap();
     
-        // TODO: make this installation_id flexible
+        // TODO: make these flexible
         // ideally, github_app should log this into blockchain/ipfs, and we can just look it up
         let installation_id = 29084972;
         let github = pool.get(installation_id);
+        let repo_owner_name = "coder-finance";
+        let repo_name = "demo-dao";
 
         // TODO: make this pull request track from the proposal
         // we need something on chain/ipfs to remember this pull request
-        let pull_request_num = 8;
+        let pull_request_num = 9;
     
         let result = github
-            .repo("coder-finance", "demo-dao")
+            .repo(repo_owner_name, repo_name)
             .pulls()
             .get(pull_request_num)
             .comments()
@@ -111,6 +116,7 @@ async fn decode_payload_proposal_merged(logs: &Vec<Log>, pool: &ClientPool) {
     
         let decoded = decode(&[
             ParamType::Uint(256),                               // proposalId
+            ParamType::String                                   // ipfsCid
             ], &buf);
         let unwrapped = decoded.unwrap();
     
@@ -120,7 +126,6 @@ async fn decode_payload_proposal_merged(logs: &Vec<Log>, pool: &ClientPool) {
 }
 
 async fn poll_for_event(config: &Config,
-    // client_pool: &ClientPool,
     web3: &web3::Web3<Http>,
     from_block: U64,
     event_hash: web3::types::H256

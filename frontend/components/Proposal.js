@@ -11,7 +11,7 @@ import { Flex, Box as FlexBox } from 'reflexbox';
 import { useWeb3React } from '@web3-react/core';
 import ReactMarkdown from 'react-markdown';
 
-import { daoAddress } from '../constants';
+import { daoAddress, ipfs } from '../constants';
 import coderDAOAbi from '../abis/CoderDAO.json';
 import { proposalStatus } from '../utils';
 
@@ -53,6 +53,7 @@ const FullView = ({ proposal, proposalState }) => (
           <Text fontSize="2">
             {proposal.id}
           </Text>
+          <Text fontSize={1}>CID: <a href={`${ipfs.httpGateway}${proposal.hash}`}>{proposal.hash}</a></Text>
           <Text fontSize={0}>
             State: {proposal && (proposal.state || proposalState) && `Ξ${proposalStatus(parseInt(proposal.state || proposalState.state))}`}
           </Text>

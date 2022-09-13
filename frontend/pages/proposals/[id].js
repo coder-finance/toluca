@@ -15,11 +15,9 @@ export async function getStaticProps({ params }) {
     const logs = await coderDao.queryFilter(filters, 0, 'latest');
     const events = logs.map((log) => coderDao.interface.parseLog(log));
   
-    const proposals = events.map((e) => { 
-      // TODO: fix this once we update the contract
-      const indexSeparator = e.args.description.indexOf(' -WITH- ');
-      const title = e.args.description.substring(0, indexSeparator);
-      const hash = e.args.description.substring(indexSeparator + 8);
+    const proposals = events.map((e) => {
+      const title = e.args.description;
+      const hash = e.args.ipfsCid;
 
       return ({
         id: e.args.proposalId.toHexString(),

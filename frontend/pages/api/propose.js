@@ -1,20 +1,10 @@
-import {
-  ethers, Wallet, Contract, utils
-} from 'ethers';
 import { create as client, globSource, CID } from 'ipfs-http-client';
-import { shop, asset, ipfs as ipfsAddr } from '../../constants';
-import coderDAOAbi from '../../abis/CoderDAO.json';
-
-const provider = new ethers.providers.InfuraProvider('ropsten', '583aa3fd29394208bee43d6d211c0762');
+import { ipfs as ipfsAddr } from '../../constants';
 
 const ipfs = client(ipfsAddr.host);
 
 const ipfsUpload = async (data) => {
   const files = [
-    // {
-    //   path: '/crypto-doggie.png',
-    //   content: fileContent
-    // },
     {
       path: '/details',
       content: JSON.stringify(data)
