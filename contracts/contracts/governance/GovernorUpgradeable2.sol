@@ -39,6 +39,7 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
     struct ProposalCore {
         TimersUpgradeable.BlockNumber voteStart;
         TimersUpgradeable.BlockNumber voteEnd;
+        string ipfsCid;
         bool executed;
         bool canceled;
         bool merged;
@@ -142,9 +143,10 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        bytes32 descriptionHash
+        bytes32 descriptionHash,
+        bytes32 ipfsHash
     ) public pure virtual override returns (uint256) {
-        return uint256(keccak256(abi.encode(targets, values, calldatas, descriptionHash)));
+        return uint256(keccak256(abi.encode(targets, values, calldatas, descriptionHash, ipfsHash)));
     }
 
     /**
@@ -255,6 +257,29 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         return "";
     }
 
+    function _emitProposalCreated (
+        uint256 proposalId,
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        uint256 snapshot,
+        uint256 deadline,
+        string memory description,
+        string memory ipfsCid
+    ) internal {
+        emit ProposalCreated(
+            proposalId,
+            _msgSender(),
+            targets,
+            values,
+            new string[](targets.length),
+            calldatas,
+            snapshot,
+            deadline,
+            description,
+            ipfsCid
+        );
+    }
     /**
      * @dev See {IGovernor-propose}.
      */
@@ -264,14 +289,15 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         bytes[] memory calldatas,
         uint256 proposalVotingDelay,
         uint256 proposalVotingPeriod,
-        string memory description
+        string memory description,
+        string memory ipfsCid
     ) public virtual override returns (uint256) {
         require(
             getVotes(_msgSender(), block.number - 1) >= proposalThreshold(),
             "Governor: proposer votes below proposal threshold"
         );
 
-        uint256 proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description)));
+        uint256 proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description)), keccak256(bytes(ipfsCid)));
 
         require(targets.length == values.length, "Governor: invalid proposal length");
         require(targets.length == calldatas.length, "Governor: invalid proposal length");
@@ -285,19 +311,9 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
 
         proposal.voteStart.setDeadline(snapshot);
         proposal.voteEnd.setDeadline(deadline);
+        _proposals[proposalId].ipfsCid = ipfsCid;
 
-        emit ProposalCreated(
-            proposalId,
-            _msgSender(),
-            targets,
-            values,
-            new string[](targets.length),
-            calldatas,
-            snapshot,
-            deadline,
-            description
-        );
-
+        _emitProposalCreated(proposalId, targets, values, calldatas, snapshot, deadline, description, ipfsCid);
         return proposalId;
     }
 
@@ -308,9 +324,10 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        bytes32 descriptionHash
+        bytes32 descriptionHash,
+        bytes32 ipfsHash
     ) public payable virtual override returns (uint256) {
-        uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash);
+        uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash, ipfsHash);
 
         ProposalState status = state(proposalId);
         require(
@@ -319,7 +336,7 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         );
         _proposals[proposalId].executed = true;
 
-        emit ProposalExecuted(proposalId);
+        emit ProposalExecuted(proposalId, _proposals[proposalId].ipfsCid);
 
         _beforeExecute(proposalId, targets, values, calldatas, descriptionHash);
         _execute(proposalId, targets, values, calldatas, descriptionHash);
@@ -350,9 +367,10 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        bytes32 descriptionHash
+        bytes32 descriptionHash,
+        bytes32 ipfsHash
     ) public payable virtual override returns (uint256) {
-        uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash);
+        uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash, ipfsHash);
 
         ProposalState status = state(proposalId);
         require(
@@ -361,7 +379,7 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         );
         _proposals[proposalId].verified = true;
 
-        emit ProposalVerified(proposalId);
+        emit ProposalVerified(proposalId, _proposals[proposalId].ipfsCid);
 
         return proposalId;
     }
@@ -377,9 +395,10 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        bytes32 descriptionHash
+        bytes32 descriptionHash,
+        bytes32 ipfsHash
     ) public payable virtual override returns (uint256) {
-        uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash);
+        uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash, ipfsHash);
 
         ProposalState status = state(proposalId);
         require(
@@ -388,7 +407,7 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         );
         _proposals[proposalId].merged = true;
 
-        emit ProposalMerged(proposalId);
+        emit ProposalMerged(proposalId, _proposals[proposalId].ipfsCid);
 
         return proposalId;
     }
@@ -439,9 +458,10 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        bytes32 descriptionHash
+        bytes32 descriptionHash,
+        bytes32 ipfsHash
     ) internal virtual returns (uint256) {
-        uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash);
+        uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash, ipfsHash);
         ProposalState status = state(proposalId);
 
         require(
@@ -450,7 +470,7 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         );
         _proposals[proposalId].canceled = true;
 
-        emit ProposalCanceled(proposalId);
+        emit ProposalCanceled(proposalId, _proposals[proposalId].ipfsCid);
 
         return proposalId;
     }

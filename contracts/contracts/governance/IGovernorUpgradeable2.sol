@@ -42,28 +42,33 @@ abstract contract IGovernorUpgradeable2 is Initializable, IERC165Upgradeable {
         bytes[] calldatas,
         uint256 startBlock,
         uint256 endBlock,
-        string description
+        string description,
+        string ipfsCid
     );
 
     /**
      * @dev Emitted when a proposal is canceled.
      */
-    event ProposalCanceled(uint256 proposalId);
+    event ProposalCanceled(uint256 proposalId,
+        string ipfsCid);
 
     /**
      * @dev Emitted when a proposal is executed.
      */
-    event ProposalExecuted(uint256 proposalId);
+    event ProposalExecuted(uint256 proposalId,
+        string ipfsCid);
 
     /**
      * @dev Emitted when a proposal is verified.
      */
-    event ProposalVerified(uint256 proposalId);
+    event ProposalVerified(uint256 proposalId,
+        string ipfsCid);
 
     /**
      * @dev Emitted when a proposal is merged into production.
      */
-    event ProposalMerged(uint256 proposalId);
+    event ProposalMerged(uint256 proposalId,
+        string ipfsCid);
 
     /**
      * @dev Emitted when a vote is cast without params.
@@ -132,7 +137,8 @@ abstract contract IGovernorUpgradeable2 is Initializable, IERC165Upgradeable {
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        bytes32 descriptionHash
+        bytes32 descriptionHash,
+        bytes32 ipfsHash
     ) public pure virtual returns (uint256);
 
     /**
@@ -218,7 +224,8 @@ abstract contract IGovernorUpgradeable2 is Initializable, IERC165Upgradeable {
         bytes[] memory calldatas,
         uint256 proposalVotingDelay,
         uint256 proposalVotingPeriod,
-        string memory description
+        string memory description,
+        string memory ipfsCid
     ) public virtual returns (uint256 proposalId);
 
     /**
@@ -233,7 +240,8 @@ abstract contract IGovernorUpgradeable2 is Initializable, IERC165Upgradeable {
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        bytes32 descriptionHash
+        bytes32 descriptionHash,
+        bytes32 ipfsHash
     ) public payable virtual returns (uint256 proposalId);
 
     /**
@@ -247,7 +255,8 @@ abstract contract IGovernorUpgradeable2 is Initializable, IERC165Upgradeable {
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        bytes32 descriptionHash
+        bytes32 descriptionHash,
+        bytes32 ipfsHash
     ) public payable virtual returns (uint256 proposalId);
 
     /**
@@ -261,7 +270,8 @@ abstract contract IGovernorUpgradeable2 is Initializable, IERC165Upgradeable {
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        bytes32 descriptionHash
+        bytes32 descriptionHash,
+        bytes32 ipfsHash
     ) public payable virtual returns (uint256 proposalId);
 
     /**

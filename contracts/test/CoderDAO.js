@@ -96,6 +96,8 @@ describe("CoderDAO", function () {
       const transferCalldata = token_instance.interface.encodeFunctionData('transfer', [team.address, grantAmount]);
       
       console.info(`transferCalldata: "${transferCalldata}"`);
+      const proposalDesc = "Proposal #1: Give grant to team";
+      const ipfsCid = "someipfshash";
 
       const proposalTx = await instance.propose(
           [token_instance.address],
@@ -103,7 +105,8 @@ describe("CoderDAO", function () {
           [transferCalldata],
           1,
           42069,
-          "Proposal #1: Give grant to team",
+          proposalDesc,
+          ipfsCid
         );
       console.log(proposalTx)
       const proposalReceipt = await proposalTx.wait(1);
@@ -130,8 +133,10 @@ describe("CoderDAO", function () {
       proposalState = await instance.state(proposalId);
       assert.equal(proposalState, '1');      
       
-      const descriptionHash = ethers.utils.id("Proposal #1: Give grant to team");
+      const descriptionHash = ethers.utils.id(proposalDesc);
       console.info(`descriptionHash: "${descriptionHash}"`);
+      const ipfsHash = ethers.utils.id(ipfsCid);
+      console.info(`ipfsHash: "${ipfsHash}"`);
       await moveBlocksHardhat(VOTING_DELAY + 1, 1);
       
       // Run proposal      
@@ -142,7 +147,8 @@ describe("CoderDAO", function () {
           [token_instance.address],
           [0],
           [transferCalldata],
-          descriptionHash
+          descriptionHash,
+          ipfsHash
         );
 
       proposalState = await instance.state(proposalId);
@@ -152,12 +158,16 @@ describe("CoderDAO", function () {
       let logs = await instance.queryFilter(filters, 0, 'latest');
       assert.equal(logs.length, 1);
 
+      let events = logs.map((log) => instance.interface.parseLog(log));
+      assert.equal(ipfsCid, events[0].args.ipfsCid);
+
       // Verify proposal 
       await instance.verify(
           [token_instance.address],
           [0],
           [transferCalldata],
-          descriptionHash
+          descriptionHash,
+          ipfsHash
         );
 
       proposalState = await instance.state(proposalId);
@@ -167,12 +177,16 @@ describe("CoderDAO", function () {
       logs = await instance.queryFilter(filters, 0, 'latest');
       assert.equal(logs.length, 1);
 
+      events = logs.map((log) => instance.interface.parseLog(log));
+      assert.equal(ipfsCid, events[0].args.ipfsCid);
+
       // Confirm merged proposal
       await instance.confirmMerge(
           [token_instance.address],
           [0],
           [transferCalldata],
-          descriptionHash
+          descriptionHash,
+          ipfsHash
         );
       proposalState = await instance.state(proposalId);
       assert.equal(proposalState, '9'); // 'ProposalState.Merged'
@@ -180,6 +194,9 @@ describe("CoderDAO", function () {
       filters = await instance.filters.ProposalMerged();
       logs = await instance.queryFilter(filters, 0, 'latest');
       assert.equal(logs.length, 1);
+
+      events = logs.map((log) => instance.interface.parseLog(log));
+      assert.equal(ipfsCid, events[0].args.ipfsCid);
 
       const contractAddress = await web3.eth.getBalance(instance.address);
       assert.equal(contractAddress, '1000000000000000000');
