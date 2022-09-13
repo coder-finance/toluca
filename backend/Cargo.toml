@@ -17,3 +17,19 @@ envy = "0.4"
 hex = "0.4.2"
 ethabi = "14.0"
 dotenv = "0.15.0"
+chrono = { version = "0.4", features = ["serde"] }
+hmac = "0.7"
+humantime = "1"
+log = "0.4"
+reqwest = { version = "0.11", default-features = false, features = ["rustls-tls"] }
+nom_pem = "4"
+
+[dependencies.hubcaps]
+git = "https://github.com/softprops/hubcaps"
+branch = "master"
+default-features = false
+features = ["rustls-tls", "jwt", "app"]
+
+[dependencies.github-types]
+git = "https://github.com/jasonwhite/github-types"
+branch = "master"
