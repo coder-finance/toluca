@@ -9,6 +9,7 @@ use ethabi::{
 
 use crate::config::Config;
 use crate::discord::discord_webhook_post;
+use crate::ipfs::lookup_payload;
 
 use std::fs;
 use crate::github_app::ClientPool;
@@ -16,8 +17,11 @@ use nom_pem;
 use hubcaps::JWTCredentials;
 use hubcaps::comments::CommentOptions;
 
-async fn decode_payload_proposal_created(logs: &Vec<Log>, pool: &ClientPool) {
+async fn decode_payload_proposal_created(config: &Config, logs: &Vec<Log>, pool: &ClientPool) {
     println!("> ProposalCreated processing... {} entries", logs.len());
+
+    let mut cids = vec![];
+
     for log in logs {
         let buf: &Vec<u8> = &log.data.0;
         let decoded = decode(&[
@@ -35,7 +39,14 @@ async fn decode_payload_proposal_created(logs: &Vec<Log>, pool: &ClientPool) {
         let unwrapped = decoded.unwrap();
 
         println!("decoded] {:?}, {:?}, {}, {}", unwrapped[6], unwrapped[7], unwrapped[8], unwrapped[9]);
+        cids.push(unwrapped[9].to_string());
     }
+
+    // TODO: bulk lookup or something
+    // hardcoding 3 for now because the data is not clean during development. remove upon contract redeployment
+    lookup_payload(&config,
+        &cids[3])
+        .await;
 }
 
 async fn decode_payload_proposal_voted_on(logs: &Vec<Log>, pool: &ClientPool) {
@@ -186,7 +197,7 @@ pub async fn poll_ethereum(config: &Config) -> web3::Result<()>{
 
         // ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)
         let created_logs = poll_for_event(&config, &web3, U64::from(0), hex!("b88787ccad609a4d41058c8a0928927dd2516296c139d218d1e9131c2c219bd3").into()).await?;
-        decode_payload_proposal_created(&created_logs, &pool).await;
+        decode_payload_proposal_created(&config, &created_logs, &pool).await;
 
         // let executed_logs = poll_for_event(&config, &web3, U64::from(0), hex!("712ae1383f79ac853f8d882153778e0260ef8f03b504e2866e0593e04d2b291f").into()).await?;
         // decode_payload_proposal_executed(&executed_logs, &pool).await;

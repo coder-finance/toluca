@@ -14,6 +14,10 @@ fn default_api_path() -> String {
     "https://api.github.com".to_string()
 }
 
+fn default_ipfs_node_uri_prefix() -> String {
+    "http://localhost:7090/ipfs".to_string()
+}
+
 fn default_private_key_path() -> PathBuf {
     [r"/", "tmp", "privkey.pem"].iter().collect()
 }
@@ -26,6 +30,9 @@ pub struct Config {
     pub discord_token: String,
     pub address_dao: String,
     pub ethereum_node: String,
+
+    #[serde(default="default_ipfs_node_uri_prefix")]
+    pub ipfs_node_uri_prefix: String,
 
     // Github App settings
     #[serde(default="default_app_id")]

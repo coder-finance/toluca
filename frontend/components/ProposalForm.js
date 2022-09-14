@@ -160,7 +160,7 @@ export default function () {
           py={3}
         >
           <Flex mx={-2} mb={3}>
-            <Box width={1 / 2} px={2}>
+            <Box width={1} px={2}>
               <Label htmlFor="title">Title</Label>
               <Input
                 id="title"
@@ -169,6 +169,30 @@ export default function () {
               />
               {errors.title && <span>Title is required</span>}
             </Box>
+            <Box width={1} px={2}>
+              <Label htmlFor="title">Github Repository URL</Label>
+              <Input
+                id="githubRepoUrl"
+                name="githubRepoUrl"
+                defaultValue="https://github.com/coder-finance/demo-dao"
+                type="url"
+                {...register('githubRepoUrl', { required: true })}
+              />
+              {errors.githubRepoUrl && <span>Github Repository URL is required</span>}
+            </Box>
+            <Box width={1} px={2}>
+              <Label htmlFor="title">Github App Installation ID^</Label>
+              <Input
+                id="githubAppInstallationId"
+                name="githubAppInstallationId"
+                defaultValue="29084972"
+                type="number"
+                {...register('githubAppInstallationId', { required: true })}
+              />
+              {errors.githubAppInstallationId && <span>Github App Installation ID is required</span>}
+            </Box>
+          </Flex>
+          <Flex mx={-2} mb={3}>
             <Box width={1 / 2} px={2}>
               <Label htmlFor="bounty">Bounty (Ξ)</Label>
               <Input
@@ -195,7 +219,7 @@ export default function () {
               </Select>
             </Box>
             <Box width={1 / 2} px={2}>
-              <Label htmlFor="title">Voting Delay</Label>
+              <Label htmlFor="votingDelay">Voting Delay</Label>
               <Input
                 id="votingDelay"
                 name="votingDelay"
@@ -205,10 +229,10 @@ export default function () {
                 max="42069"
                 {...register('votingDelay', { required: true })}
               />
-              {errors.title && <span>Voting Delay is required</span>}
+              {errors.votingDelay && <span>Voting Delay is required</span>}
             </Box>
             <Box width={1 / 2} px={2}>
-              <Label htmlFor="title">Voting Period</Label>
+              <Label htmlFor="votingPeriod">Voting Period</Label>
               <Input
                 id="votingPeriod"
                 name="votingPeriod"
@@ -218,7 +242,7 @@ export default function () {
                 max="42069"
                 {...register('votingPeriod', { required: true })}
               />
-              {errors.title && <span>Voting Period is required</span>}
+              {errors.votingPeriod && <span>Voting Period is required</span>}
             </Box>
           </Flex>
           <ReactMarkdown>{markdownBody}</ReactMarkdown>
@@ -235,6 +259,9 @@ export default function () {
                 name="agree"
               />
               I agree to the coderDAO terms and conditions and code of conduct.
+            </Label>
+            <Label width={[1, 1]} p={2}>
+              ^ This should be moved to backend detected
             </Label>
             <Box px={2} ml="auto">
               <Button>

@@ -28,6 +28,7 @@ const propose = async (req, res) => {
   const id = await ipfs.id();
   console.info(`Found IPFS node. ID: ${id.id}`);
 
+  console.info(`Logging into IPFS: ${body}`);
   const ipfsResult = await ipfsUpload(payload);
   res.status(200).json({ result: 'ok', ipfs: ipfsResult.ipfs[0] });
 };
