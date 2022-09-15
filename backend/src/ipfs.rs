@@ -9,21 +9,20 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>
 
 use crate::config::Config;
 
-pub async fn lookup_payload(config: &Config, cid: &String) -> Result<()> {
+pub async fn lookup_proposal_on_ipfs(config: &Config, cid: &String) -> Result<Proposal> {
     let prefix = &config.ipfs_node_uri_prefix;
     let ipfs_node_uri = prefix.to_owned() + "/" + cid;
     println!("ipfs_node_uri value: {:#?}", ipfs_node_uri);
     let url = ipfs_node_uri.parse().unwrap();
     println!("url value: {:#?}", url);
 
-    // TODO: Error handling
     let value = fetch_json(url).await?;
     println!("payload value: {:#?}", value);
-    Ok(())
+    Ok(value)
 }
 
 
-async fn fetch_json(url: hyper::Uri) -> Result<Payload> {
+async fn fetch_json(url: hyper::Uri) -> Result<Proposal> {
     let host = url.host().expect("uri has no host");
     let port = url.port_u16().unwrap_or(80);
     let addr = format!("{}:{}", host, port);
@@ -58,23 +57,29 @@ async fn fetch_json(url: hyper::Uri) -> Result<Payload> {
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct Payload {
+pub struct Proposal {
     #[allow(unused)]
-    title: String,
+    pub title: String,
     #[allow(unused)]
-    github_repo_url: String,
+    pub github_repo_url: String,
     #[allow(unused)]
-    bounty: String,
+    // pub github_repo_owner: String,
+    // #[allow(unused)]
+    // pub github_repo_name: String,
+    // #[allow(unused)]
+    pub bounty: String,
     #[allow(unused)]
-    category: String,
+    pub category: String,
     #[allow(unused)]
-    voting_delay: String,
+    pub voting_delay: String,
     #[allow(unused)]
-    voting_period: String,
+    pub voting_period: String,
     #[allow(unused)]
-    github_app_installation_id: String,
+    pub github_app_installation_id: String,
     #[allow(unused)]
-    body: String,
+    pub body: String,
     #[allow(unused)]
-    initiator: String,
+    pub initiator: String,
+    // #[allow(unused)]
+    // version: String,
 }

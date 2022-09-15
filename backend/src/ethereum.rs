@@ -9,7 +9,7 @@ use ethabi::{
 
 use crate::config::Config;
 use crate::discord::discord_webhook_post;
-use crate::ipfs::lookup_payload;
+use crate::ipfs::lookup_proposal_on_ipfs;
 
 use std::fs;
 use crate::github_app::ClientPool;
@@ -40,16 +40,41 @@ async fn decode_payload_proposal_created(config: &Config, logs: &Vec<Log>, pool:
 
         println!("decoded] {:?}, {:?}, {}, {}", unwrapped[6], unwrapped[7], unwrapped[8], unwrapped[9]);
         cids.push(unwrapped[9].to_string());
-    }
 
-    // TODO: bulk lookup or something
-    // hardcoding 3 for now because the data is not clean during development. remove upon contract redeployment
-    lookup_payload(&config,
-        &cids[3])
-        .await;
+        // TODO: Write to README.md? Or make a new file e.g. Log.md? TBD
+        //       Or put it in the github wiki
+        // This is for demo purposes atm
+        if let Ok(proposal) = lookup_proposal_on_ipfs(&config,
+            &unwrapped[9].to_string())
+            .await {
+            println!("[CREATED] successful decode: {}", unwrapped[9]);
+
+            let github = pool.get(proposal.github_app_installation_id.parse::<u64>().unwrap());
+            let repo_owner_name = "coder-finance";
+            let repo_name = "demo-dao";
+
+            // TODO: make this pull request track from the proposal
+            // we need something on chain/ipfs to remember this pull request
+            let pull_request_num = 9;
+        
+            let result = github
+                .repo(repo_owner_name, repo_name)
+                .pulls()
+                .get(pull_request_num)
+                .comments()
+                .create(&CommentOptions { body: 
+                    format!("### Proposal 0x{} Created\n Initiator: {}\nOn Block {}\nView on [Etherscan](https://ropsten.etherscan.io/tx/{:#x})", 
+                        unwrapped[0], proposal.title, proposal.initiator, log.block_number.unwrap(), log.transaction_hash.unwrap()
+                    ).to_string() } )
+                .await
+                .unwrap();
+        } else {
+            println!("[CREATED] failed to decode: {}", unwrapped[9]);
+        }
+    }
 }
 
-async fn decode_payload_proposal_voted_on(logs: &Vec<Log>, pool: &ClientPool) {
+async fn decode_payload_proposal_voted_on(config: &Config, logs: &Vec<Log>, pool: &ClientPool) {
     for log in logs {
         let buf: &Vec<u8> = &log.data.0;
 
@@ -66,7 +91,7 @@ async fn decode_payload_proposal_voted_on(logs: &Vec<Log>, pool: &ClientPool) {
     }
 }
 
-async fn decode_payload_proposal_executed(logs: &Vec<Log>, pool: &ClientPool) {
+async fn decode_payload_proposal_executed(config: &Config, logs: &Vec<Log>, pool: &ClientPool) {
     for log in logs {
         let buf: &Vec<u8> = &log.data.0;
     
@@ -76,13 +101,22 @@ async fn decode_payload_proposal_executed(logs: &Vec<Log>, pool: &ClientPool) {
             ], &buf);
         let unwrapped = decoded.unwrap();
 
-        println!("[ProposalExecuted] 0x{}", unwrapped[0]);
+        println!("[ProposalExecuted] 0x{}, ipfs: {}", unwrapped[0], unwrapped[1]);
+
+        // TODO: bulk lookup or something
+        if let Ok(payload) = lookup_proposal_on_ipfs(&config,
+            &unwrapped[9].to_string())
+            .await {
+            println!("[EXECUTED] successful decode: {}", unwrapped[9]);
+        } else {
+            println!("[EXECUTED] failed to decode: {}", unwrapped[9]);
+        }
         // TODO: Look up the commit on github
         // TODO: add comment on the pull request
     }
 }
 
-async fn decode_payload_proposal_verified(logs: &Vec<Log>, pool: &ClientPool) {
+async fn decode_payload_proposal_verified(config: &Config, logs: &Vec<Log>, pool: &ClientPool) {
     for log in logs {
         let buf: &Vec<u8> = &log.data.0;
 
@@ -116,11 +150,11 @@ async fn decode_payload_proposal_verified(logs: &Vec<Log>, pool: &ClientPool) {
             .await
             .unwrap();
     
-        println!("[ProposalVerified] 0x{}: Written '{}', result: {}", unwrapped[0], result.body, result.id);
+        println!("[ProposalVerified] 0x{}, ipfs: {}: Written '{}', result: {}", unwrapped[0], unwrapped[1], result.body, result.id);
     }
 }
 
-async fn decode_payload_proposal_merged(logs: &Vec<Log>, pool: &ClientPool) {
+async fn decode_payload_proposal_merged(config: &Config, logs: &Vec<Log>, pool: &ClientPool) {
     for log in logs {
         let buf: &Vec<u8> = &log.data.0;
     

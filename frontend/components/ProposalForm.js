@@ -22,17 +22,17 @@ import {
 
 import { useWeb3React } from '@web3-react/core';
 
-import { daoAddress, daoTokenAddress } from '../constants';
+import { coderdao, daoAddress, daoTokenAddress } from '../constants';
 import coderDAOAbi from '../abis/CoderDAO.json';
 import coderDAOTokenAbi from '../abis/CoderDAOToken.json';
 
+// TODO: make this available for different networks
 const connection = new providers.InfuraProvider('ropsten');
 
 export default function () {
   const {
     register, handleSubmit, watch, formState: { errors }
   } = useForm();
-  const [value, setValue] = useState();
   const [submittedProposal, setSubmittedProposal] = useState(null);
   const [blockchainValidation, setBlockchainValidation] = useState({ result: 'unverified' });
   const [markdownBody, setMarkdownBody] = useState('# Proposal Title');
@@ -44,7 +44,7 @@ export default function () {
       return;
     }
 
-    const payload = { ...data, initiator: account };
+    const payload = { ...data, version: coderdao.version, initiator: account };
 
     const response = await fetch('/api/propose', {
       method: 'POST',
@@ -106,21 +106,6 @@ export default function () {
     return { result: 'ok' };
   };
 
-  useEffect(() => {
-    const ProposalRetrievalFn = async () => {
-      if (account) {
-        const lib = await library;
-
-        // The Contract object
-        const coderDao = new Contract(daoAddress, coderDAOAbi, connection);
-        const daoName = await coderDao.name();
-        setValue(daoName);
-      }
-    };
-
-    ProposalRetrievalFn();
-  }, [account]);
-
   if (submittedProposal !== null && blockchainValidation.result === 'ok') {
     return (
       <Box>
@@ -179,6 +164,26 @@ export default function () {
                 {...register('githubRepoUrl', { required: true })}
               />
               {errors.githubRepoUrl && <span>Github Repository URL is required</span>}
+            </Box>
+            <Box width={1} px={2}>
+              <Label htmlFor="title">Github Repository Owner Username</Label>
+              <Input
+                id="githubRepoOwner"
+                name="githubRepoOwner"
+                defaultValue="coder-finance"
+                {...register('githubRepoOwner', { required: true })}
+              />
+              {errors.githubRepoOwner && <span>Github Repository Owner is required</span>}
+            </Box>
+            <Box width={1} px={2}>
+              <Label htmlFor="title">Github Repository Name</Label>
+              <Input
+                id="githubRepoName"
+                name="githubRepoName"
+                defaultValue="demo-dao"
+                {...register('githubRepoName', { required: true })}
+              />
+              {errors.githubRepoName && <span>Github Repository Name is required</span>}
             </Box>
             <Box width={1} px={2}>
               <Label htmlFor="title">Github App Installation ID^</Label>
