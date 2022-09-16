@@ -15,3 +15,6 @@ Cargo.lock
 
 # Dockefile ignores
 .env.list
+
+# Config file
+toluca.state
