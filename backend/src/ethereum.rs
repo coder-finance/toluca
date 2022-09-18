@@ -1,23 +1,38 @@
 use std::str::FromStr;
+use std::str::from_utf8;
 use hex_literal::hex;
+use hex::FromHex;
 use tokio::time::Duration;
-use web3::types::{BlockNumber, U64, Address, Log};
+
+use web3::{
+    contract::{Contract, Options},
+    types::{BlockNumber, U256, H256, U64, Address, Log},
+};
 use web3::transports::http::Http;
+
 use ethabi::{
     decode, ParamType,
 };
 
 use crate::config::Config;
 use crate::discord::discord_webhook_post;
+use crate::ipfs::Proposal;
 use crate::ipfs::lookup_proposal_on_ipfs;
+use crate::coderdao::ProposalState;
 
+use std::convert::TryInto;
 use std::fs;
 use crate::github_app::ClientPool;
 use nom_pem;
 use hubcaps::JWTCredentials;
 use hubcaps::comments::CommentOptions;
 
-async fn decode_payload_proposal_created(config: &Config, logs: &Vec<Log>, pool: &ClientPool) {
+async fn decode_payload_proposal_created(config: &Config, 
+    web3: &web3::Web3<Http>,
+    logs: &Vec<Log>,
+    pool: &ClientPool)
+{
+    let address_dao = &config.address_dao;
     println!("> ProposalCreated processing... {} entries", logs.len());
 
     let mut cids = vec![];
@@ -47,27 +62,66 @@ async fn decode_payload_proposal_created(config: &Config, logs: &Vec<Log>, pool:
         if let Ok(proposal) = lookup_proposal_on_ipfs(&config,
             &unwrapped[9].to_string())
             .await {
-            println!("[CREATED] successful decode: {}", unwrapped[9]);
+            println!("[CREATED] 0x{} successful decode: {}", unwrapped[0].to_string(), unwrapped[9]);
 
-            let github = pool.get(proposal.github_app_installation_id.parse::<u64>().unwrap());
-            let repo_owner_name = "coder-finance";
-            let repo_name = "demo-dao";
+            // ETH mutation
+            {
+                // 1. Check if proposal is successfully voted in
+                let addr = Address::from_str(address_dao).unwrap();
+                let contract = Contract::from_json(web3.eth(), addr, include_bytes!("../res/CoderDAO.json")).unwrap();
+                let buffer = <[u8; 32]>::from_hex(unwrapped[0].to_string().as_str()).unwrap();
+                let result: u64 = contract.query("state", (U256::from(buffer),), None, Options::default(), None).await.unwrap();
+                let state: ProposalState = result.try_into().unwrap();
+                println!("result is: {}", state);
+            }
 
-            // TODO: make this pull request track from the proposal
-            // we need something on chain/ipfs to remember this pull request
-            let pull_request_num = 9;
+            // Github mutation
+            {
+                let github = pool.get(proposal.github_app_installation_id.parse::<u64>().unwrap());
+                let repo_owner_name = "coder-finance";
+                let repo_name = "demo-dao";
         
-            let result = github
-                .repo(repo_owner_name, repo_name)
-                .pulls()
-                .get(pull_request_num)
-                .comments()
-                .create(&CommentOptions { body: 
-                    format!("### Proposal {}: (0x{}) Created\n Initiator: {}\nOn Block {}\nView on [Etherscan](https://ropsten.etherscan.io/tx/{:#x})", 
-                        unwrapped[0], proposal.title, proposal.initiator, log.block_number.unwrap(), log.transaction_hash.unwrap()
-                    ).to_string() } )
-                .await
-                .unwrap();
+                // TODO: make this pull request track from the proposal
+                // we need something on chain/ipfs to remember this pull request
+                let pull_request_num = 9;
+                
+                let repo = github.repo(repo_owner_name, repo_name);
+        
+                match repo.content().file("README.md", "main").await {
+                    Ok(coderdao_log) => {
+                        // update lets go
+                        println!("CoderDao log: {}", from_utf8(&coderdao_log.content).unwrap());
+        
+                        match repo.content().update("README.md", b"helloworld", "updating README.md", "6adfb183a4a2c94a2f92dab5ade762a47889a5a1").await {
+                            Ok(result) => println!("Successfully created audit log"),
+                            Err(err) => {
+                                println!("FAILED to create audit log: {}", err);
+                            }
+                        }
+                    },
+                    Err(err) => {
+                        println!("README.md doesn't exist for this repo... {}", err);
+        
+                        match repo.content().create("README.md", b"helloworld", "Initial commit README.md").await {
+                            Ok(result) => println!("Successfully created audit log"),
+                            Err(err) => {
+                                println!("FAILED to create audit log: {}", err);
+                            }
+                        }
+                    }
+                } 
+        
+                // let result = repo
+                //     .pulls()
+                //     .get(pull_request_num)
+                //     .comments()
+                //     .create(&CommentOptions { body: 
+                //         format!("### Proposal {}: (0x{}) Created\n Initiator: {}\nOn Block {}\nView on [Etherscan](https://ropsten.etherscan.io/tx/{:#x})", 
+                //             unwrapped[0], proposal.title, proposal.initiator, log.block_number.unwrap(), log.transaction_hash.unwrap()
+                //         ).to_string() } )
+                //     .await
+                //     .unwrap();
+            }
         } else {
             println!("[CREATED] failed to decode: {}", unwrapped[9]);
         }
@@ -319,8 +373,8 @@ pub async fn poll_ethereum(config: &Config) -> web3::Result<()>{
         // alternatively: Run it on https://emn178.github.io/online-tools/keccak_256.html
 
         // ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)
-        let created_logs = poll_for_event(&config, &web3, /*U64::from(0)*/block_num, hex!("b88787ccad609a4d41058c8a0928927dd2516296c139d218d1e9131c2c219bd3").into()).await?;
-        decode_payload_proposal_created(&config, &created_logs, &pool).await;
+        let created_logs = poll_for_event(&config, &web3, U64::from(0)/*block_num*/, hex!("b88787ccad609a4d41058c8a0928927dd2516296c139d218d1e9131c2c219bd3").into()).await?;
+        decode_payload_proposal_created(&config, &web3, &created_logs, &pool).await;
 
         // let executed_logs = poll_for_event(&config, &web3, U64::from(0), hex!("712ae1383f79ac853f8d882153778e0260ef8f03b504e2866e0593e04d2b291f").into()).await?;
         // decode_payload_proposal_executed(&executed_logs, &pool).await;

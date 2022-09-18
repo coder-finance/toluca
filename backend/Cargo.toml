@@ -26,6 +26,8 @@ nom_pem = "4"
 hyper = "0.14"
 bytes = "1"
 http-body-util = { git = "https://github.com/hyperium/http-body", rev = "6d7dd17" }
+strum = { version = "0.24", features = ["derive"] }
+strum_macros = "0.24"
 
 [dependencies.hubcaps]
 git = "https://github.com/softprops/hubcaps"

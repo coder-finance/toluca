@@ -12,6 +12,7 @@ mod ethereum;
 mod routes;
 mod github_app;
 mod ipfs;
+mod coderdao;
 
 use crate::ethereum::poll_ethereum;
 
