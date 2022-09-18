@@ -330,7 +330,7 @@ async fn poll_for_event(config: &Config,
 
     let filter = web3.eth_filter().create_logs_filter(filter).await?;
     let logs = filter.logs().await?;
-    let query_deets = format!("Querying starting from block #{}\nNew logs retrieved: {}", from_block, &*logs.len().to_string());
+    let query_deets = format!("Querying starting from block #{}\nNew logs retrieved: {}", from_block, logs.len());
 
     discord_webhook_post(&config, query_deets, None).await;
 
