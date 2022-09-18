@@ -69,6 +69,13 @@ export async function getStaticPaths() {
 }
 
 function ProposalDetails(props) {
+  const onClientSide = typeof window !== 'undefined';
+
+  if (onClientSide) {
+    // TODO: Look up current user state on proposal (votes etc)
+    console.info('running on client side!!!')
+  }
+
   return (
     <Proposal proposal={props.proposal} />
   );
