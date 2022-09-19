@@ -72,7 +72,18 @@ async fn decode_payload_proposal_created(config: &Config,
                 let buffer = <[u8; 32]>::from_hex(unwrapped[0].to_string().as_str()).unwrap();
                 let result: u64 = contract.query("state", (U256::from(buffer),), None, Options::default(), None).await.unwrap();
                 let state: ProposalState = result.try_into().unwrap();
-                println!("result is: {}", state);
+
+                match state {
+                    ProposalState::Succeeded => {
+                        println!("succeeded, lets start tracking");
+                    },
+                    ProposalState::Queued => {
+                        println!("queued, lets start tracking");
+                    },
+                    _ => {
+                        println!("result not recognized: {}", result);
+                    }
+                }
             }
 
             // Github mutation
@@ -109,18 +120,7 @@ async fn decode_payload_proposal_created(config: &Config,
                             }
                         }
                     }
-                } 
-        
-                // let result = repo
-                //     .pulls()
-                //     .get(pull_request_num)
-                //     .comments()
-                //     .create(&CommentOptions { body: 
-                //         format!("### Proposal {}: (0x{}) Created\n Initiator: {}\nOn Block {}\nView on [Etherscan](https://ropsten.etherscan.io/tx/{:#x})", 
-                //             unwrapped[0], proposal.title, proposal.initiator, log.block_number.unwrap(), log.transaction_hash.unwrap()
-                //         ).to_string() } )
-                //     .await
-                //     .unwrap();
+                }
             }
         } else {
             println!("[CREATED] failed to decode: {}", unwrapped[9]);

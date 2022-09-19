@@ -106,7 +106,8 @@ describe("CoderDAO", function () {
           1,
           42069,
           proposalDesc,
-          ipfsCid
+          ipfsCid,
+          1234
         );
       console.log(proposalTx)
       const proposalReceipt = await proposalTx.wait(1);

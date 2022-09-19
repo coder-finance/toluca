@@ -55,21 +55,12 @@ export default function () {
     return txnResult;
   };
 
-  const submitProposalToBlockchain = async (proposal, ipfsHash) => {
-    const lib = await library;
-    const signer = lib
-      .getSigner(account);
-
-    const txCount = await signer.getTransactionCount();
-
+  const submitProposalToBlockchain = async (proposal, ipfsHash, coderDaoContract) => {
     // The Contract object
-    const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
-    const tokenContract = new Contract(daoTokenAddress, coderDAOTokenAbi, lib.getSigner());
-    const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
     const response = await coderDaoContract.propose(
-      [daoTokenAddress],
-      [0],
-      [transferCalldata],
+      proposal.contract.targets,
+      proposal.contract.values,
+      [proposal.contract.transferCalldata],
       proposal.votingDelay,
       proposal.votingPeriod,
       proposal.title,
@@ -81,21 +72,30 @@ export default function () {
   const onSubmit = async (formData) => {
     if (markdownBody.length <= 0) return;
 
-    const result = await ProposalCheckFn(formData);
+    const lib = await library;
+
+    const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
+    const tokenContract = new Contract(daoTokenAddress, coderDAOTokenAbi, lib.getSigner());
+    const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
+
+    // TODO: Revise this, as it is currently defaulting token transfer 0
+    const targets = [daoTokenAddress];
+    const values = [0];
+
+    const result = await ProposalCheckFn(formData, coderDaoContract);
     setBlockchainValidation(result);
 
-    const data = { ...formData, body: markdownBody };
+    const data = { ...formData, contract: { targets, values, transferCalldata }, body: markdownBody };
     const res = await submitProposalToBackend(data);
 
     const txnResult = await submitProposalToBlockchain(data, res.ipfs);
     setSubmittedProposal(res);
   };
 
-  const ProposalCheckFn = async (proposal) => {
+  const ProposalCheckFn = async (proposal, coderDaoContract) => {
     const lib = await library;
 
     // check for duplicates
-    const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
     const filters = await coderDaoContract.filters.ProposalCreated();
     const logs = await coderDaoContract.queryFilter(filters, 0, 'latest');
     const events = logs.map((log) => coderDaoContract.interface.parseLog(log));

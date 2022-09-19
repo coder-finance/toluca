@@ -13,6 +13,7 @@ import "@openzeppelin/contracts-upgradeable/utils/structs/DoubleEndedQueueUpgrad
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/TimersUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/vendor/compound/ICompoundTimelockUpgradeable.sol";
 import "./IGovernorUpgradeable2.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
@@ -31,15 +32,30 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
     using DoubleEndedQueueUpgradeable for DoubleEndedQueueUpgradeable.Bytes32Deque;
     using SafeCastUpgradeable for uint256;
     using TimersUpgradeable for TimersUpgradeable.BlockNumber;
+    using TimersUpgradeable for TimersUpgradeable.Timestamp;
 
     bytes32 public constant BALLOT_TYPEHASH = keccak256("Ballot(uint256 proposalId,uint8 support)");
     bytes32 public constant EXTENDED_BALLOT_TYPEHASH =
         keccak256("ExtendedBallot(uint256 proposalId,uint8 support,string reason,bytes params)");
 
+    ICompoundTimelockUpgradeable private _timelock;
+
+    struct ProposalTimelock {
+        TimersUpgradeable.Timestamp timer;
+    }
+
+    mapping(uint256 => ProposalTimelock) private _proposalTimelocks;
+
+    /**
+     * @dev Emitted when the timelock controller used for proposal execution is modified.
+     */
+    event TimelockChange(address oldTimelock, address newTimelock);
+
     struct ProposalCore {
         TimersUpgradeable.BlockNumber voteStart;
         TimersUpgradeable.BlockNumber voteEnd;
         string ipfsCid;
+        uint256 ipfsPayloadVersion;   // version of proposal data
         bool executed;
         bool canceled;
         bool merged;
@@ -152,7 +168,27 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
     /**
      * @dev See {IGovernor-state}.
      */
-    function state(uint256 proposalId) public view virtual override returns (ProposalState) {
+    function state(uint256 proposalId) public view override virtual returns (ProposalState) {
+        ProposalState status = _state(proposalId);
+
+        if (status != ProposalState.Succeeded) {
+            return status;
+        }
+
+        uint256 eta = proposalEta(proposalId);
+        if (eta == 0) {
+            return status;
+        } else if (block.timestamp >= eta + _timelock.GRACE_PERIOD()) {
+            return ProposalState.Expired;
+        } else {
+            return ProposalState.Queued;
+        }
+    }
+
+    /**
+     * @dev Internal contract state determination logic
+     */
+    function _state(uint256 proposalId) public view virtual returns (ProposalState) {
         ProposalCore storage proposal = _proposals[proposalId];
 
         if (proposal.merged) {
@@ -265,7 +301,8 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         uint256 snapshot,
         uint256 deadline,
         string memory description,
-        string memory ipfsCid
+        string memory ipfsCid,
+        uint256 ipfsPayloadVersion
     ) internal {
         emit ProposalCreated(
             proposalId,
@@ -277,7 +314,8 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
             snapshot,
             deadline,
             description,
-            ipfsCid
+            ipfsCid,
+            ipfsPayloadVersion
         );
     }
     /**
@@ -290,7 +328,8 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         uint256 proposalVotingDelay,
         uint256 proposalVotingPeriod,
         string memory description,
-        string memory ipfsCid
+        string memory ipfsCid,
+        uint256 ipfsPayloadVersion
     ) public virtual override returns (uint256) {
         require(
             getVotes(_msgSender(), block.number - 1) >= proposalThreshold(),
@@ -312,8 +351,9 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         proposal.voteStart.setDeadline(snapshot);
         proposal.voteEnd.setDeadline(deadline);
         _proposals[proposalId].ipfsCid = ipfsCid;
+        _proposals[proposalId].ipfsPayloadVersion = ipfsPayloadVersion;
 
-        _emitProposalCreated(proposalId, targets, values, calldatas, snapshot, deadline, description, ipfsCid);
+        _emitProposalCreated(proposalId, targets, values, calldatas, snapshot, deadline, description, ipfsCid, ipfsPayloadVersion);
         return proposalId;
     }
 
@@ -336,7 +376,7 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         );
         _proposals[proposalId].executed = true;
 
-        emit ProposalExecuted(proposalId, _proposals[proposalId].ipfsCid);
+        emit ProposalExecuted(proposalId, _proposals[proposalId].ipfsCid, _proposals[proposalId].ipfsPayloadVersion);
 
         _beforeExecute(proposalId, targets, values, calldatas, descriptionHash);
         _execute(proposalId, targets, values, calldatas, descriptionHash);
@@ -363,6 +403,35 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
     }
 
 
+    /**
+     * @dev Function to queue a proposal to the timelock.
+     */
+    function queue(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 descriptionHash,
+        bytes32 ipfsHash
+    ) public virtual returns (uint256) {
+        uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash, ipfsHash);
+
+        require(state(proposalId) == ProposalState.Succeeded, "Governor: proposal not successful");
+
+        uint256 eta = block.timestamp + _timelock.delay();
+        _proposalTimelocks[proposalId].timer.setDeadline(eta.toUint64());
+        for (uint256 i = 0; i < targets.length; ++i) {
+            require(
+                !_timelock.queuedTransactions(keccak256(abi.encode(targets[i], values[i], "", calldatas[i], eta))),
+                "GovernorTimelockCompound: identical proposal action already queued"
+            );
+            _timelock.queueTransaction(targets[i], values[i], "", calldatas[i], eta);
+        }
+
+        emit ProposalQueued(proposalId, _proposals[proposalId].ipfsCid, eta, _proposals[proposalId].ipfsPayloadVersion);
+
+        return proposalId;
+    }
+
     function verify(
         address[] memory targets,
         uint256[] memory values,
@@ -379,7 +448,7 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         );
         _proposals[proposalId].verified = true;
 
-        emit ProposalVerified(proposalId, _proposals[proposalId].ipfsCid);
+        emit ProposalVerified(proposalId, _proposals[proposalId].ipfsCid, _proposals[proposalId].ipfsPayloadVersion);
 
         return proposalId;
     }
@@ -407,7 +476,7 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         );
         _proposals[proposalId].merged = true;
 
-        emit ProposalMerged(proposalId, _proposals[proposalId].ipfsCid);
+        emit ProposalMerged(proposalId, _proposals[proposalId].ipfsCid, _proposals[proposalId].ipfsPayloadVersion);
 
         return proposalId;
     }
@@ -470,7 +539,7 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         );
         _proposals[proposalId].canceled = true;
 
-        emit ProposalCanceled(proposalId, _proposals[proposalId].ipfsCid);
+        emit ProposalCanceled(proposalId, _proposals[proposalId].ipfsCid, _proposals[proposalId].ipfsPayloadVersion);
 
         return proposalId;
     }
@@ -640,6 +709,42 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
      */
     function _executor() internal view virtual returns (address) {
         return address(this);
+    }
+
+    /**
+     * @dev Public endpoint to update the underlying timelock instance. Restricted to the timelock itself, so updates
+     * must be proposed, scheduled, and executed through governance proposals.
+     *
+     * For security reasons, the timelock must be handed over to another admin before setting up a new one. The two
+     * operations (hand over the timelock) and do the update can be batched in a single proposal.
+     *
+     * Note that if the timelock admin has been handed over in a previous operation, we refuse updates made through the
+     * timelock if admin of the timelock has already been accepted and the operation is executed outside the scope of
+     * governance.
+
+     * CAUTION: It is not recommended to change the timelock while there are other queued governance proposals.
+     */
+    function updateTimelock(ICompoundTimelockUpgradeable newTimelock) external virtual onlyGovernance {
+        _updateTimelock(newTimelock);
+    }
+
+    function _updateTimelock(ICompoundTimelockUpgradeable newTimelock) private {
+        emit TimelockChange(address(_timelock), address(newTimelock));
+        _timelock = newTimelock;
+    }
+
+    /**
+     * @dev Public accessor to check the address of the timelock
+     */
+    function timelock() public view virtual returns (address) {
+        return address(_timelock);
+    }
+
+    /**
+     * @dev Public accessor to check the eta of a queued proposal
+     */
+    function proposalEta(uint256 proposalId) public view virtual returns (uint256) {
+        return _proposalTimelocks[proposalId].timer.getDeadline();
     }
 
     /**

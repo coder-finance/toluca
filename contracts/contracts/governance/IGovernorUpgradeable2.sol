@@ -43,32 +43,51 @@ abstract contract IGovernorUpgradeable2 is Initializable, IERC165Upgradeable {
         uint256 startBlock,
         uint256 endBlock,
         string description,
-        string ipfsCid
+        string ipfsCid,
+        uint256 version
     );
 
     /**
      * @dev Emitted when a proposal is canceled.
      */
     event ProposalCanceled(uint256 proposalId,
-        string ipfsCid);
+        string ipfsCid,
+        uint256 version);
 
     /**
      * @dev Emitted when a proposal is executed.
      */
     event ProposalExecuted(uint256 proposalId,
-        string ipfsCid);
+        string ipfsCid,
+        uint256 version);
+
+    event ProposalQueued(uint256 proposalId,
+        string ipfsCid,
+        uint256 version,
+        uint256 eta);
 
     /**
      * @dev Emitted when a proposal is verified.
      */
     event ProposalVerified(uint256 proposalId,
-        string ipfsCid);
+        string ipfsCid,
+        uint256 version);
 
     /**
      * @dev Emitted when a proposal is merged into production.
      */
     event ProposalMerged(uint256 proposalId,
-        string ipfsCid);
+        string ipfsCid,
+        uint256 version);
+
+    /**
+     * @dev Emitted when a proposal receives a contribution lodged.
+     */
+    event ProposalContributionLodged(uint256 proposalId,
+        string repositoryId,
+        uint256 pullRequestNumber,
+        string ipfsCid,
+        uint256 version);
 
     /**
      * @dev Emitted when a vote is cast without params.
@@ -225,8 +244,24 @@ abstract contract IGovernorUpgradeable2 is Initializable, IERC165Upgradeable {
         uint256 proposalVotingDelay,
         uint256 proposalVotingPeriod,
         string memory description,
-        string memory ipfsCid
+        string memory ipfsCid,
+        uint256 version
     ) public virtual returns (uint256 proposalId);
+
+    /**
+     * @dev Contribute to an existing proposal.
+     *
+     * Emits a {ProposalContributionLodged} event.
+     */
+    // function lodgeContribution(
+    //     address[] memory targets,
+    //     uint256[] memory values,
+    //     bytes[] memory calldatas,
+    //     uint256 proposalVotingDelay,
+    //     uint256 proposalVotingPeriod,
+    //     string memory description,
+    //     string memory ipfsCid
+    // ) public virtual returns (uint256 proposalId);
 
     /**
      * @dev Execute a successful proposal. This requires the quorum to be reached, the vote to be successful, and the
