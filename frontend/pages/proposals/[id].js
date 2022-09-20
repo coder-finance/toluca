@@ -1,5 +1,9 @@
+import { useState } from 'react';
 import { Contract, providers, utils } from 'ethers';
+
+import { useWeb3React } from '@web3-react/core';
 import Proposal from '../../components/Proposal'
+import ProposalVoteStatus from '../../components/ProposalVoteStatus';
 import { daoAddress, ipfs } from '../../constants';
 import coderDAOAbi from '../../abis/CoderDAO.json';
 
@@ -7,14 +11,14 @@ const connection = new providers.InfuraProvider('ropsten');
 
 // This also gets called at build time
 export async function getStaticProps({ params }) {
-  
+
   const ProposalRetrievalFn = async () => {
     // The Contract object
     const coderDao = new Contract(daoAddress, coderDAOAbi, connection);
     const filters = await coderDao.filters.ProposalCreated();
     const logs = await coderDao.queryFilter(filters, 0, 'latest');
     const events = logs.map((log) => coderDao.interface.parseLog(log));
-  
+
     const proposals = events.map((e) => {
       const title = e.args.description;
       const hash = e.args.ipfsCid;
@@ -70,14 +74,27 @@ export async function getStaticPaths() {
 
 function ProposalDetails(props) {
   const onClientSide = typeof window !== 'undefined';
+  const [voted, setVoted] = useState(false);
 
   if (onClientSide) {
-    // TODO: Look up current user state on proposal (votes etc)
-    console.info('running on client side!!!')
+    const { account } = useWeb3React();
+
+    const checkDAO = async (account) => {
+      if (account && props.proposal) {
+        const coderDao = new Contract(daoAddress, coderDAOAbi, connection);
+        const voted = await coderDao.hasVoted(props.proposal.id, account);
+        setVoted(voted);
+      }
+    }
+
+    checkDAO(account);
   }
 
   return (
-    <Proposal proposal={props.proposal} />
+    <>
+      {voted && <ProposalVoteStatus />}
+      <Proposal proposal={props.proposal} />
+    </>
   );
 }
 
