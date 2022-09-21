@@ -476,11 +476,12 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
             status == ProposalState.Verified,
             "Governor: proposal not verified"
         );
-        _proposals[proposalId].merged = true;
 
         _beforeExecute(proposalId, targets, values, calldatas, descriptionHash, ipfsHash);
         _execute(proposalId, targets, values, calldatas, descriptionHash, ipfsHash);
         _afterExecute(proposalId, targets, values, calldatas, descriptionHash, ipfsHash);
+
+        _proposals[proposalId].merged = true;
 
         emit ProposalMerged(proposalId, _proposals[proposalId].ipfsCid, _proposals[proposalId].ipfsPayloadVersion);
 
