@@ -378,9 +378,10 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
 
         emit ProposalExecuted(proposalId, _proposals[proposalId].ipfsCid, _proposals[proposalId].ipfsPayloadVersion);
 
-        _beforeExecute(proposalId, targets, values, calldatas, descriptionHash);
-        _execute(proposalId, targets, values, calldatas, descriptionHash);
-        _afterExecute(proposalId, targets, values, calldatas, descriptionHash);
+        // We call this at confirmMerge
+        // _beforeExecute(proposalId, targets, values, calldatas, descriptionHash);
+        // _execute(proposalId, targets, values, calldatas, descriptionHash);
+        // _afterExecute(proposalId, targets, values, calldatas, descriptionHash);
 
         return proposalId;
     }
@@ -393,7 +394,8 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
-        bytes32 /*descriptionHash*/
+        bytes32 /*descriptionHash*/,
+        bytes32 /*ipfsHash*/
     ) internal virtual {
         string memory errorMessage = "Governor: call reverted without message";
         for (uint256 i = 0; i < targets.length; ++i) {
@@ -476,6 +478,10 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         );
         _proposals[proposalId].merged = true;
 
+        _beforeExecute(proposalId, targets, values, calldatas, descriptionHash, ipfsHash);
+        _execute(proposalId, targets, values, calldatas, descriptionHash, ipfsHash);
+        _afterExecute(proposalId, targets, values, calldatas, descriptionHash, ipfsHash);
+
         emit ProposalMerged(proposalId, _proposals[proposalId].ipfsCid, _proposals[proposalId].ipfsPayloadVersion);
 
         return proposalId;
@@ -489,7 +495,8 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         address[] memory targets,
         uint256[] memory, /* values */
         bytes[] memory calldatas,
-        bytes32 /*descriptionHash*/
+        bytes32 /*descriptionHash*/,
+        bytes32 /*ipfsHash*/
     ) internal virtual {
         if (_executor() != address(this)) {
             for (uint256 i = 0; i < targets.length; ++i) {
@@ -508,7 +515,8 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         address[] memory, /* targets */
         uint256[] memory, /* values */
         bytes[] memory, /* calldatas */
-        bytes32 /*descriptionHash*/
+        bytes32 /*descriptionHash*/,
+        bytes32 /*ipfsHash*/
     ) internal virtual {
         if (_executor() != address(this)) {
             if (!_governanceCall.empty()) {
