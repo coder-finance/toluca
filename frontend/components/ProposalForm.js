@@ -88,7 +88,7 @@ export default function () {
     const data = { ...formData, contract: { targets, values, transferCalldata }, body: markdownBody };
     const res = await submitProposalToBackend(data);
 
-    const txnResult = await submitProposalToBlockchain(data, res.ipfs);
+    const txnResult = await submitProposalToBlockchain(data, res.ipfs, coderDaoContract);
     setSubmittedProposal(res);
   };
 

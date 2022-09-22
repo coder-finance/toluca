@@ -1,6 +1,6 @@
 export const ipfs = {
   host: 'http://127.0.0.1:5001',
-  httpGateway: 'http://127.0.0.1:7090/ipfs/',
+  httpGateway: 'http://127.0.0.1:8080/ipfs/',
 };
 
 export const coderdao = {
