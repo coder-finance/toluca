@@ -63,8 +63,12 @@ describe("CoderDAO", function () {
       const tokenSupply = web3.utils.toWei('100');
 
       await token_instance.mint(owner.address, tokenSupply);
+      const ownerStartingBalance = await token_instance.balanceOf(owner.address);
+      assert.equal(ownerStartingBalance.toString(), '200000000000000000000');
       // contract needs to have some to test
       await token_instance.mint(instance.address, tokenSupply);
+      const contractStartingBalance = await token_instance.balanceOf(instance.address);
+      assert.equal(contractStartingBalance.toString(), '100000000000000000000');
 
       const startBalance = await team.getBalance();
       assert.equal(startBalance.toString(), '10000000000000000000000');
@@ -201,6 +205,13 @@ describe("CoderDAO", function () {
 
       const contractAddress = await web3.eth.getBalance(instance.address);
       assert.equal(contractAddress, '1000000000000000000');
+
+      const contractEndingBalance = await token_instance.balanceOf(instance.address);
+      assert.equal(contractEndingBalance.toString(), '99000000000000000000');
+
+      const teamEndingBalance = await token_instance.balanceOf(team.address);
+      assert.equal(teamEndingBalance.toString(), grantAmount);
+
       // assert.equal((await team.getBalance()).toString(), value.add(startBalance).toString()); 
     
     });
