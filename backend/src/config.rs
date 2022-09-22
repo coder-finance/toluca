@@ -17,7 +17,7 @@ fn default_api_path() -> String {
 }
 
 fn default_ipfs_node_uri_prefix() -> String {
-    "http://localhost:7090/ipfs".to_string()
+    "http://localhost:8080/ipfs".to_string()
 }
 
 fn default_private_key_path() -> PathBuf {
