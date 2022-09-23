@@ -16,6 +16,7 @@ import coderDAOAbi from '../abis/CoderDAO.json';
 import { proposalStatus } from '../utils';
 
 import { Label, Radio } from '@rebass/forms'
+import ProposalProgress from './ProposalProgress';
 
 const connection = new providers.InfuraProvider('ropsten');
 
@@ -151,13 +152,9 @@ const FullView = ({ proposal, proposalState }) => {
           </Label>
         </Box>
       </Box>
-
-      <article>
-        {proposal.content && <Content content={proposal.content} />}
-      </article>
-    </>
-  )
-};
+      <ProposalProgress proposal={proposal} />
+    </>)
+}
 
 export default function ({ proposal, previewOnly }) {
   const [proposalState, setProposalState] = useState();
