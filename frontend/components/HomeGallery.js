@@ -28,8 +28,6 @@ function HomeGallery(props) {
     const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
   
     const proposals = events.map((e) => { 
-      // TODO: fix this once we update the contract
-      const indexSeparator = e.args.description.indexOf(' -WITH- ');
       const title = e.args.description;
       const hash = e.args.ipfsCid;
 
