@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Contract, providers, utils } from 'ethers';
+import { useForm } from 'react-hook-form';
 import {
   Box,
   Card,
-  Image,
+  Button,
   Heading,
   Text
 } from 'rebass';
@@ -11,8 +12,10 @@ import { Flex, Box as FlexBox } from 'reflexbox';
 import { useWeb3React } from '@web3-react/core';
 import ReactMarkdown from 'react-markdown';
 
-import { daoAddress, ipfs } from '../constants';
+import { ipfs, daoAddress, daoTokenAddress } from '../constants';
 import coderDAOAbi from '../abis/CoderDAO.json';
+import coderDAOTokenAbi from '../abis/CoderDAOToken.json';
+
 import { proposalStatus } from '../utils';
 
 import { Label, Radio } from '@rebass/forms'
@@ -123,7 +126,10 @@ const FullView = ({ proposal, proposalState }) => {
           Merged
         </Box>
       </Flex>
-      <Box p={3}>
+      <Box p={3}
+        as="form"
+        onSubmit={handleVote(onSubmit)}
+      >
         <Heading p={1}>Your vote:</Heading>
         <Box>
           <Label p={1}>
@@ -132,7 +138,7 @@ const FullView = ({ proposal, proposalState }) => {
               id='for'
               value='for'
             />
-            Red
+            For
           </Label>
           <Label p={1}>
             <Radio
@@ -140,7 +146,7 @@ const FullView = ({ proposal, proposalState }) => {
               id='against'
               value='against'
             />
-            Green
+            Against
           </Label>
           <Label p={1}>
             <Radio
@@ -148,7 +154,7 @@ const FullView = ({ proposal, proposalState }) => {
               id='abstain'
               value='abstain'
             />
-            Blue
+            Abstain
           </Label>
         </Box>
       </Box>
@@ -158,7 +164,159 @@ const FullView = ({ proposal, proposalState }) => {
 
 export default function ({ proposal, previewOnly }) {
   const [proposalState, setProposalState] = useState();
-  const { account } = useWeb3React();
+  const { account, library } = useWeb3React();
+  const {
+    register, handleSubmit, watch, formState: { errors }
+  } = useForm();
+
+  const onSubmit = async (formData, e) => {
+    console.log(102, formData, e);
+    const lib = await library;
+
+    const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
+    const tokenContract = new Contract(daoTokenAddress, coderDAOTokenAbi, lib.getSigner());
+
+
+    // TODO: Revise this, as it is currently defaulting token transfer 0
+    const targets = [daoTokenAddress];
+    const values = [0];
+    const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
+    const descriptionHash = web3.utils.keccak256(proposal.title);
+
+    // condensed version for queueing end executing
+    const shortProposal = [
+      targets,
+      values,
+      [transferCalldata],
+      descriptionHash,
+    ];
+
+    // proposal id
+    const id = web3.utils.toBN(web3.utils.keccak256(web3.eth.abi.encodeParameters(
+      ['address[]', 'uint256[]', 'bytes[]', 'bytes32'],
+      shortProposal,
+    )));
+
+    let voteTx = await coderDaoContract.connect(account).castVote(proposal.id, 1);
+
+    const txnResult = await submitProposalToBlockchain(data, res.ipfs, coderDaoContract);
+    setSubmittedProposal(res);
+  };
+
+
+  const FullView = ({ proposal, proposalState }) => {
+    const proposalStatusLabel = proposal && (proposal.state || proposalState) && proposalStatus(parseInt(proposal.state || proposalState.state));
+    return (
+      <>
+        <Flex>
+          <FlexBox width={[1 / 2]} p={1}>
+            <Card>
+              <Box p={2}>
+                <Heading as="h1">
+                  {proposal.title}
+                </Heading>
+              </Box>
+              <Box p={2}>
+                <Text fontSize="2">
+                  {proposal.id}
+                </Text>
+              </Box>
+              <Text fontSize={1}>CID: <a href={`${ipfs.httpGateway}${proposal.hash}`}>{proposal.hash}</a></Text>
+              <Text fontSize={0}>
+                State: {proposal && (proposal.state || proposalState) && `Ξ${proposalStatus(parseInt(proposal.state || proposalState.state))}`}
+              </Text>
+              {proposal.snapshot && <Text fontSize={0}>Snapshot: {proposal.snapshot}</Text>}
+              {proposal.deadline && <Text fontSize={0}>Deadline: {proposal.deadline}</Text>}
+            </Card>
+          </FlexBox>
+          <FlexBox width={[1 / 2]} p={1}>
+            <Card>
+              <Box
+              >
+                {proposal.votes && <Box>
+                  <Text fontSize={0}>For: {proposal.votes.for}</Text>
+                  <Text fontSize={0}>Against: {proposal.votes.against}</Text>
+                  <Text fontSize={0}>Abstain: {proposal.votes.abstain}</Text>
+                  <Text fontSize={0}>Bounty: {proposal.content.bounty}</Text>
+                  <Text fontSize={0}>Category: {proposal.content.category}</Text>
+                  <Text fontSize={0}>Initiator: {proposal.content.initiator}</Text>
+                </Box>}
+              </Box>
+            </Card>
+          </FlexBox>
+        </Flex>
+
+        <Flex>
+          <Box p={3} color='white' bg={proposalStatusLabel == 'Pending' ? 'primary' : 'secondary'}>
+            Pending
+          </Box>
+          <Box p={3} color='white' bg={proposalStatusLabel == 'Active' ? 'primary' : 'secondary'}>
+            Active
+          </Box>
+          <Box p={3} color='white' bg={proposalStatusLabel == 'Canceled' ? 'primary' : 'secondary'}>
+            Canceled
+          </Box>
+          <Box p={3} color='white' bg={proposalStatusLabel == 'Defeated' ? 'primary' : 'secondary'}>
+            Defeated
+          </Box>
+          <Box p={3} color='white' bg={proposalStatusLabel == 'Succeeded' ? 'primary' : 'secondary'}>
+            Succeeded
+          </Box>
+          <Box p={3} color='white' bg={proposalStatusLabel == 'Queued' ? 'primary' : 'secondary'}>
+            Queued
+          </Box>
+          <Box p={3} color='white' bg={proposalStatusLabel == 'Expired' ? 'primary' : 'secondary'}>
+            Expired
+          </Box>
+          <Box p={3} color='white' bg={proposalStatusLabel == 'Executed' ? 'primary' : 'secondary'}>
+            Executed
+          </Box>
+          <Box p={3} color='white' bg={proposalStatusLabel == 'Verified' ? 'primary' : 'secondary'}>
+            Verified
+          </Box>
+          <Box p={3} color='white' bg={proposalStatusLabel == 'Merged' ? 'primary' : 'secondary'}>
+            Merged
+          </Box>
+        </Flex>
+        <Box p={3}>
+          <Heading p={1}>Your vote:</Heading>
+          <Box as="form"
+            onSubmit={handleSubmit(onSubmit, (e) => console.error)}>
+            <Label p={1}>
+              <Radio
+                name='voteValue'
+                id='for'
+                value='for'
+                {...register('voteValue', { required: true })}
+              />
+              ✅ For
+            </Label>
+            <Label p={1}>
+              <Radio
+                name='voteValue'
+                id='against'
+                value='against'
+                {...register('voteValue', { required: true })}
+              />
+              🚫 Against
+            </Label>
+            <Label p={1}>
+              <Radio
+                name='voteValue'
+                id='abstain'
+                value='abstain'
+                {...register('voteValue', { required: true })}
+              />
+              ⭕️ Abstain
+            </Label>
+            <Button>
+              Submit
+            </Button>
+          </Box>
+        </Box>
+        <ProposalProgress proposal={proposal} />
+      </>)
+  }
 
   // Only gets called when previewing (client-side)
   useEffect(() => {
