@@ -46,8 +46,8 @@ describe("CoderDAO", function () {
   })
 
   describe("Deployment", function () {
-    it("Should set the right name", async function () {
-      const [ owner, proposer, voter1, voter2, voter3, voter4, team ] = await ethers.getSigners();
+    it("Should run through happy path", async function () {
+      const [ owner, proposer, voter1, voter2, voter3, voter4, team, contributor1 ] = await ethers.getSigners();
           
       const token_instance = await upgrades.deployProxy(this.token, {kind: 'uups'});
       const instance = await upgrades.deployProxy(this.dao, [token_instance.address, 1], {kind: 'uups'});
@@ -143,24 +143,60 @@ describe("CoderDAO", function () {
       const ipfsHash = ethers.utils.id(ipfsCid);
       console.info(`ipfsHash: "${ipfsHash}"`);
       await moveBlocksHardhat(VOTING_DELAY + 1, 1);
-      
-      // Run proposal      
+
       proposalState = await instance.state(proposalId);
       assert.equal(proposalState, '4');      
  
+      const repositoryId = "github.com/somerepo";
+      const pullRequestNumber = 1;
+
+      /* 
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 descriptionHash,
+        string memory ipfsCid,
+        string memory repositoryId,
+        uint256 pullRequestNumber,
+        uint256 ipfsPayloadVersion,
+        uint256 attemptNumber
+        */
+
+      // Lodge contribution
+      await instance.connect(contributor1).lodgeContribution(
+        [token_instance.address],
+        [0],
+        [transferCalldata],
+        descriptionHash,
+        ipfsHash,
+        repositoryId,
+        pullRequestNumber,
+        1,
+        1
+      );
+
+      let filters = await instance.filters.ProposalContributionLodged();
+      let logs = await instance.queryFilter(filters, 0, 'latest');
+      assert.equal(logs.length, 1);
+
+      assert.equal(logs[0].args.lodger, contributor1.address);
+
+      // Execute proposal with lodged contribution
       await instance.execute(
           [token_instance.address],
           [0],
           [transferCalldata],
           descriptionHash,
-          ipfsHash
+          ipfsHash,
+          contributor1.address,
+          1
         );
 
       proposalState = await instance.state(proposalId);
       assert.equal(proposalState, '7'); // 'ProposalState.Executed'
       
-      let filters = await instance.filters.ProposalExecuted();
-      let logs = await instance.queryFilter(filters, 0, 'latest');
+      filters = await instance.filters.ProposalExecuted();
+      logs = await instance.queryFilter(filters, 0, 'latest');
       assert.equal(logs.length, 1);
 
       let events = logs.map((log) => instance.interface.parseLog(log));
@@ -172,7 +208,9 @@ describe("CoderDAO", function () {
           [0],
           [transferCalldata],
           descriptionHash,
-          ipfsHash
+          ipfsHash,
+          contributor1.address,
+          1
         );
 
       proposalState = await instance.state(proposalId);
@@ -191,7 +229,9 @@ describe("CoderDAO", function () {
           [0],
           [transferCalldata],
           descriptionHash,
-          ipfsHash
+          ipfsHash,
+          contributor1.address,
+          1
         );
       proposalState = await instance.state(proposalId);
       assert.equal(proposalState, '9'); // 'ProposalState.Merged'

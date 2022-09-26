@@ -55,16 +55,25 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         TimersUpgradeable.BlockNumber voteStart;
         TimersUpgradeable.BlockNumber voteEnd;
         string ipfsCid;
-        uint256 ipfsPayloadVersion;   // version of proposal data
+        uint256 ipfsPayloadVersion;             // version of proposal data
+        uint256 executedContributionId;         // the contribution id of the executed code
         bool executed;
         bool canceled;
         bool merged;
         bool verified;
     }
 
+    struct ProposalContribution {
+        uint256 proposalId;
+        string ipfsCid;
+        address lodger;
+        bool lodged;
+    }
+
     string private _name;
 
     mapping(uint256 => ProposalCore) private _proposals;
+    mapping(uint256 => ProposalContribution) private _contributions;
 
     // This queue keeps track of the governor operating on itself. Calls to functions protected by the
     // {onlyGovernance} modifier needs to be whitelisted in this queue. Whitelisting is set in {_beforeExecute},
@@ -163,6 +172,18 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         bytes32 ipfsHash
     ) public pure virtual override returns (uint256) {
         return uint256(keccak256(abi.encode(targets, values, calldatas, descriptionHash, ipfsHash)));
+    }
+
+    function hashProposalContribution(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 descriptionHash,
+        bytes32 ipfsHash,
+        address sender,
+        uint256 attemptNumber
+    ) public pure virtual returns (uint256) {
+        return uint256(keccak256(abi.encode(targets, values, calldatas, descriptionHash, ipfsHash, sender, attemptNumber)));
     }
 
     /**
@@ -318,6 +339,7 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
             ipfsPayloadVersion
         );
     }
+
     /**
      * @dev See {IGovernor-propose}.
      */
@@ -365,9 +387,12 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         uint256[] memory values,
         bytes[] memory calldatas,
         bytes32 descriptionHash,
-        bytes32 ipfsHash
+        bytes32 ipfsHash,
+        address lodger,
+        uint256 attemptNumber
     ) public payable virtual override returns (uint256) {
         uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash, ipfsHash);
+        uint256 contribId = hashProposalContribution(targets, values, calldatas, descriptionHash, ipfsHash, msg.sender, attemptNumber);
 
         ProposalState status = state(proposalId);
         require(
@@ -375,8 +400,9 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
             "Governor: proposal not successful"
         );
         _proposals[proposalId].executed = true;
+        _proposals[proposalId].executedContributionId = contribId;
 
-        emit ProposalExecuted(proposalId, _proposals[proposalId].ipfsCid, _proposals[proposalId].ipfsPayloadVersion);
+        emit ProposalExecuted(proposalId, lodger, attemptNumber, msg.sender, _proposals[proposalId].ipfsCid, _proposals[proposalId].ipfsPayloadVersion);
 
         // We call this at confirmMerge
         // _beforeExecute(proposalId, targets, values, calldatas, descriptionHash);
@@ -439,7 +465,9 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         uint256[] memory values,
         bytes[] memory calldatas,
         bytes32 descriptionHash,
-        bytes32 ipfsHash
+        bytes32 ipfsHash,
+        address lodger,
+        uint256 attemptNumber
     ) public payable virtual override returns (uint256) {
         uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash, ipfsHash);
 
@@ -450,7 +478,7 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         );
         _proposals[proposalId].verified = true;
 
-        emit ProposalVerified(proposalId, _proposals[proposalId].ipfsCid, _proposals[proposalId].ipfsPayloadVersion);
+        emit ProposalVerified(proposalId, lodger, attemptNumber, msg.sender, _proposals[proposalId].ipfsCid, _proposals[proposalId].ipfsPayloadVersion);
 
         return proposalId;
     }
@@ -467,7 +495,9 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         uint256[] memory values,
         bytes[] memory calldatas,
         bytes32 descriptionHash,
-        bytes32 ipfsHash
+        bytes32 ipfsHash,
+        address lodger,
+        uint256 attemptNumber
     ) public payable virtual override returns (uint256) {
         uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash, ipfsHash);
 
@@ -483,9 +513,43 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
 
         _proposals[proposalId].merged = true;
 
-        emit ProposalMerged(proposalId, _proposals[proposalId].ipfsCid, _proposals[proposalId].ipfsPayloadVersion);
+        emit ProposalMerged(proposalId, lodger, attemptNumber, msg.sender, _proposals[proposalId].ipfsCid, _proposals[proposalId].ipfsPayloadVersion);
 
         return proposalId;
+    }
+
+    /**
+     * @dev See {IGovernor-propose}.
+     */
+    function lodgeContribution(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 descriptionHash,
+        string memory ipfsCid,
+        string memory repositoryId,
+        uint256 pullRequestNumber,
+        uint256 ipfsPayloadVersion,
+        uint256 attemptNumber
+    ) public virtual returns (uint256) {
+        // TODO: guard against non-existent proposals
+        
+        uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash, keccak256(bytes(ipfsCid)));
+        uint256 contribId = hashProposalContribution(targets, values, calldatas, descriptionHash, keccak256(bytes(ipfsCid)), msg.sender, attemptNumber);
+
+        require(targets.length == values.length, "Governor: invalid proposal length");
+        require(targets.length == calldatas.length, "Governor: invalid proposal length");
+        require(targets.length > 0, "Governor: empty proposal");
+
+        ProposalContribution storage contrib = _contributions[contribId];
+        require(contrib.lodged == false, "Governor: contribution already exists");
+
+        _contributions[contribId].ipfsCid = ipfsCid;
+        _contributions[contribId].lodger = msg.sender;
+        _contributions[contribId].lodged = true;
+
+        emit ProposalContributionLodged(proposalId, msg.sender, attemptNumber, repositoryId, pullRequestNumber, ipfsCid, ipfsPayloadVersion);
+        return contribId;
     }
 
     /**
