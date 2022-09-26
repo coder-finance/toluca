@@ -181,7 +181,7 @@ export default function ({ proposal, previewOnly }) {
     const targets = [daoTokenAddress];
     const values = [0];
     const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
-    const descriptionHash = web3.utils.keccak256(proposal.title);
+    const descriptionHash = utils.id(proposal.title);
 
     // condensed version for queueing end executing
     const shortProposal = [
@@ -192,12 +192,14 @@ export default function ({ proposal, previewOnly }) {
     ];
 
     // proposal id
-    const id = web3.utils.toBN(web3.utils.keccak256(web3.eth.abi.encodeParameters(
+    const proposalId = utils.id(utils.defaultAbiCoder.encode(
       ['address[]', 'uint256[]', 'bytes[]', 'bytes32'],
       shortProposal,
-    )));
+    ));
 
-    let voteTx = await coderDaoContract.connect(account).castVote(proposal.id, 1);
+    let voteTx = await coderDaoContract.connect(account).castVote(proposalId, 1);
+
+    console.log(103, voteTx);
 
     const txnResult = await submitProposalToBlockchain(data, res.ipfs, coderDaoContract);
     setSubmittedProposal(res);
