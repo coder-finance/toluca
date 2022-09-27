@@ -46,19 +46,19 @@ describe("CoderDAO", function () {
   })
 
   describe("Deployment", function () {
-    it("Should run through happy path", async function () {
-      const [ owner, proposer, voter1, voter2, voter3, voter4, team, contributor1 ] = await ethers.getSigners();
-          
-      const token_instance = await upgrades.deployProxy(this.token, {kind: 'uups'});
-      const instance = await upgrades.deployProxy(this.dao, [token_instance.address, 1], {kind: 'uups'});
+    it("Should set the right name", async function () {
+      const [owner, proposer, voter1, voter2, voter3, voter4, team] = await ethers.getSigners();
+
+      const token_instance = await upgrades.deployProxy(this.token, { kind: 'uups' });
+      const instance = await upgrades.deployProxy(this.dao, [token_instance.address, 1], { kind: 'uups' });
       assert(await instance.name() === name);
-      
+
 
       const VOTING_START_DELAY = 420;
       const VOTING_DELAY = 45818;
       const value = web3.utils.toWei('1');
       await web3.eth.sendTransaction({ from: owner.address, to: instance.address, value });
-      
+
       const helper = new GovernorHelper(instance);
       const tokenSupply = web3.utils.toWei('100');
 
@@ -87,7 +87,7 @@ describe("CoderDAO", function () {
       //await helper.delegate({ token: token_instance, to: voter2.address, value: web3.utils.toWei('7') }, { from: owner.address });
       //await helper.delegate({ token: token_instance, to: voter3.address, value: web3.utils.toWei('5') }, { from: owner.address });
       //await helper.delegate({ token: token_instance, to: voter4.address, value: web3.utils.toWei('2') }, { from: owner.address });
-      
+
       /*const proposal = helper.setProposal([
               {
                   target: this.receiver.address,
@@ -95,24 +95,24 @@ describe("CoderDAO", function () {
                   value,
                 },
             ], '<proposal description>');*/
-  
+
       const grantAmount = web3.utils.toWei('1');
       const transferCalldata = token_instance.interface.encodeFunctionData('transfer', [team.address, grantAmount]);
-      
+
       console.info(`transferCalldata: "${transferCalldata}"`);
       const proposalDesc = "Proposal #1: Give grant to team";
       const ipfsCid = "someipfshash";
 
       const proposalTx = await instance.propose(
-          [token_instance.address],
-          [0],
-          [transferCalldata],
-          1,
-          42069,
-          proposalDesc,
-          ipfsCid,
-          1234
-        );
+        [token_instance.address],
+        [0],
+        [transferCalldata],
+        1,
+        42069,
+        proposalDesc,
+        ipfsCid,
+        1234
+      );
       console.log(proposalTx)
       const proposalReceipt = await proposalTx.wait(1);
       await network.provider.send('evm_mine');
@@ -120,7 +120,35 @@ describe("CoderDAO", function () {
       console.log(202, proposalReceipt.events);
       let proposalState = await instance.state(proposalId);
       assert.equal(proposalState, '0');
-      
+
+      // **************************************************************************
+      // Build proposal ID from parts
+      const proposalIdHashedBYContract = await instance.hashProposal(
+        [token_instance.address],
+        [0],
+        [transferCalldata],
+        ethers.utils.id(proposalDesc),
+        ethers.utils.id(ipfsCid)
+      );
+      console.log(105, proposalIdHashedBYContract)
+      assert(proposalIdHashedBYContract.eq(proposalId), "proposal Id hashed by the contract")
+
+      // uint256 proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description)), keccak256(bytes(ipfsCid)));
+      const shortProposal = [
+        [token_instance.address],   // targets
+        [0],                        // values
+        [transferCalldata],         // calldatas
+        ethers.utils.id(proposalDesc),
+        ethers.utils.id(ipfsCid)
+      ];
+      const proposalPartsEncoded = ethers.utils.defaultAbiCoder.encode(
+        ['address[]', 'uint256[]', 'bytes[]', 'bytes32', 'bytes32'],
+        shortProposal,
+      );
+      const proposalIdFromPartsU256 = ethers.BigNumber.from(ethers.utils.keccak256(proposalPartsEncoded));
+      assert(proposalIdFromPartsU256.eq(proposalId), "proposal Id hashed by JS")
+
+      // **************************************************************************
       // Testing voting
       assert(await instance.hasVoted(proposalId, owner.address) === false);
       assert(await instance.hasVoted(proposalId, voter1.address) === false);
@@ -136,8 +164,8 @@ describe("CoderDAO", function () {
       assert.equal(votes.forVotes, web3.utils.toWei('5'));
 
       proposalState = await instance.state(proposalId);
-      assert.equal(proposalState, '1');      
-      
+      assert.equal(proposalState, '1');
+
       const descriptionHash = ethers.utils.id(proposalDesc);
       console.info(`descriptionHash: "${descriptionHash}"`);
       const ipfsHash = ethers.utils.id(ipfsCid);
@@ -145,8 +173,8 @@ describe("CoderDAO", function () {
       await moveBlocksHardhat(VOTING_DELAY + 1, 1);
 
       proposalState = await instance.state(proposalId);
-      assert.equal(proposalState, '4');      
- 
+      assert.equal(proposalState, '4');
+
       const repositoryId = "github.com/somerepo";
       const pullRequestNumber = 1;
 
@@ -183,18 +211,18 @@ describe("CoderDAO", function () {
 
       // Execute proposal with lodged contribution
       await instance.execute(
-          [token_instance.address],
-          [0],
-          [transferCalldata],
-          descriptionHash,
-          ipfsHash,
-          contributor1.address,
-          1
-        );
+        [token_instance.address],
+        [0],
+        [transferCalldata],
+        descriptionHash,
+        ipfsHash,
+        contributor1.address,
+        1
+      );
 
       proposalState = await instance.state(proposalId);
       assert.equal(proposalState, '7'); // 'ProposalState.Executed'
-      
+
       filters = await instance.filters.ProposalExecuted();
       logs = await instance.queryFilter(filters, 0, 'latest');
       assert.equal(logs.length, 1);
@@ -204,14 +232,14 @@ describe("CoderDAO", function () {
 
       // Verify proposal 
       await instance.verify(
-          [token_instance.address],
-          [0],
-          [transferCalldata],
-          descriptionHash,
-          ipfsHash,
-          contributor1.address,
-          1
-        );
+        [token_instance.address],
+        [0],
+        [transferCalldata],
+        descriptionHash,
+        ipfsHash,
+        contributor1.address,
+        1
+      );
 
       proposalState = await instance.state(proposalId);
       assert.equal(proposalState, '8'); // 'ProposalState.Verified'
@@ -225,14 +253,14 @@ describe("CoderDAO", function () {
 
       // Confirm merged proposal
       await instance.confirmMerge(
-          [token_instance.address],
-          [0],
-          [transferCalldata],
-          descriptionHash,
-          ipfsHash,
-          contributor1.address,
-          1
-        );
+        [token_instance.address],
+        [0],
+        [transferCalldata],
+        descriptionHash,
+        ipfsHash,
+        contributor1.address,
+        1
+      );
       proposalState = await instance.state(proposalId);
       assert.equal(proposalState, '9'); // 'ProposalState.Merged'
 
@@ -253,13 +281,13 @@ describe("CoderDAO", function () {
       assert.equal(teamEndingBalance.toString(), grantAmount);
 
       // assert.equal((await team.getBalance()).toString(), value.add(startBalance).toString()); 
-    
+
     });
-    
+
     it("Should be able to upgrade", async function () {
-      const token_instance = await upgrades.deployProxy(this.token, {kind: 'uups'});
+      const token_instance = await upgrades.deployProxy(this.token, { kind: 'uups' });
       const instance = await upgrades.deployProxy(this.dao, [token_instance.address, '1']);
-      const daoV2 = await upgrades.upgradeProxy(instance, this.daoV2, {kind: 'uups'});
+      const daoV2 = await upgrades.upgradeProxy(instance, this.daoV2, { kind: 'uups' });
       assert(await daoV2.version() === '2');
     });
   });
