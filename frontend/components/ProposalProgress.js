@@ -33,8 +33,7 @@ const ProposalProgress = ({ proposal }) => {
         const proposalCreatedEvent = logsCreated.filter(e => e.args[0].toHexString() === proposal.id);
         console.error('proposalcreated', proposal.id, proposalCreatedEvent[0].blockNumber);
         const proposalCreatedText = proposalCreatedEvent.length > 0 ? `Created on block ${proposalCreatedEvent[0].blockNumber}` : '';
-        // const tx = await proposalCreated[0].getTransaction();
-        // console.error('txn', tx);
+        const txCreated = await proposalCreatedEvent[0].getTransaction();
 
         filters = await coderDao.filters.ProposalCanceled();
         const logsCanceled = await coderDao.queryFilter(filters, 0, 'latest');
@@ -60,8 +59,8 @@ const ProposalProgress = ({ proposal }) => {
         console.error('proposalmerged', proposal.id, proposalMergedEvent);
         const proposalMergedText = proposalMergedEvent.length > 0 ? `Merged on block ${proposalMergedEvent[0].blockNumber}` : '';
 
-        setProposalLog([proposalCreatedText, proposalCancelledText, proposalExecutedText, 
-          proposalVerifiedText, proposalMergedText]);
+        setProposalLog({ progress: [proposalCreatedText, proposalCancelledText, proposalExecutedText, 
+          proposalVerifiedText, proposalMergedText], createdBy: txCreated.from });
       }
     };
 
@@ -81,8 +80,8 @@ const ProposalProgress = ({ proposal }) => {
           <Text fontSize={4}>{proposal.id}</Text>
         </Box>
         <Box>
-          <Text fontSize={0}>Proposed by: 0x0000</Text>
-          {proposalLog && proposalLog.map(l => <Text fontSize={0}>{l}</Text>)}
+          {proposalLog && <Text fontSize={0}>Proposed by: {proposalLog.createdBy}</Text>}
+          {proposalLog && proposalLog.progress.map(l => <Text fontSize={0}>{l}</Text>)}
         </Box>
       </FlexBox>
     </Card>
