@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Contract, providers, utils } from 'ethers';
+import { BigNumber, Contract, providers, utils } from 'ethers';
 import { useForm } from 'react-hook-form';
 import {
   Box,
@@ -178,26 +178,46 @@ export default function ({ proposal, previewOnly }) {
 
 
     // TODO: Revise this, as it is currently defaulting token transfer 0
+    // uint256 proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description)), keccak256(bytes(ipfsCid)));
     const targets = [daoTokenAddress];
     const values = [0];
     const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
-    const descriptionHash = utils.id(proposal.title);
+
+    console.log(103, proposal);
 
     // condensed version for queueing end executing
     const shortProposal = [
       targets,
       values,
       [transferCalldata],
-      descriptionHash,
+      utils.id(proposal.title),
+      utils.id(proposal.hash)
     ];
 
-    // proposal id
-    const proposalId = utils.id(utils.defaultAbiCoder.encode(
-      ['address[]', 'uint256[]', 'bytes[]', 'bytes32'],
+    const proposalPartsEncoded = utils.defaultAbiCoder.encode(
+      ['address[]', 'uint256[]', 'bytes[]', 'bytes32', 'bytes32'],
       shortProposal,
-    ));
+    );
+    const proposalIdFromPartsU256 = BigNumber.from(utils.keccak256(proposalPartsEncoded));
 
-    let voteTx = await coderDaoContract.connect(account).castVote(proposalId, 1);
+
+    console.log(104, proposalIdFromPartsU256);
+    let voteValueInt = -1;
+    switch (formData.voteValue) {
+      case "for":
+        voteValueInt = 1;
+        break;
+      case "against":
+        voteValueInt = 2;
+        break;
+      case "abstain":
+        voteValueInt = 3;
+        break;
+      default:
+        console.error("Invalid voteValue", formData.voteValue)
+    }
+
+    let voteTx = await coderDaoContract.castVote(proposalIdFromPartsU256, voteValueInt);
 
     console.log(103, voteTx);
 
