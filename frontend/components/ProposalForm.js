@@ -64,7 +64,8 @@ export default function () {
       proposal.votingDelay,
       proposal.votingPeriod,
       proposal.title,
-      ipfsHash
+      ipfsHash,
+      coderdao.proposalVersion
     );
     return response;
   };

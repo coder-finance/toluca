@@ -20,6 +20,7 @@ import { proposalStatus } from '../utils';
 
 import { Label, Radio } from '@rebass/forms'
 import ProposalProgress from './ProposalProgress';
+import ProposalContributionForm from './ProposalContributionForm';
 
 const connection = new providers.InfuraProvider('ropsten');
 
@@ -336,6 +337,7 @@ export default function ({ proposal, previewOnly }) {
             </Button>
           </Box>
         </Box>
+        <ProposalContributionForm proposal={proposal} />
         <ProposalProgress proposal={proposal} />
       </>)
   }
