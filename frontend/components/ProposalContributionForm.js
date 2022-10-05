@@ -33,7 +33,7 @@ export default function () {
   const [submittedContribution, setSubmittedContribution] = useState(null);
   const [blockchainValidation, setBlockchainValidation] = useState({ result: 'unverified' });
   const [markdownBody, setMarkdownBody] = useState('# Proposal Title');
-  const { account, library } = useWeb3React();
+  const { account, chainId, library } = useWeb3React();
 
   const submitContributionToBlockchain = async (formData, coderDaoContract) => {
     alert('TODO: uncomment below once contract upgraded')
@@ -57,7 +57,7 @@ export default function () {
 
     const lib = await library;
 
-    const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
+    const coderDaoContract = new Contract(daoAddress[chainId], coderDAOAbi, lib.getSigner());
     const txnResult = await submitContributionToBlockchain(formData, coderDaoContract);
     setSubmittedContribution(txnResult);
   };

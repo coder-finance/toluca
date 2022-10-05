@@ -10,11 +10,10 @@ import coderDAOAbi from '../../abis/CoderDAO.json';
 const connection = new providers.InfuraProvider('ropsten');
 
 // This also gets called at build time
-export async function getStaticProps({ params }) {
-
+export async function getServerSideProps({ params, query }) {
   const ProposalRetrievalFn = async () => {
     // The Contract object
-    const coderDao = new Contract(daoAddress, coderDAOAbi, connection);
+    const coderDao = new Contract(daoAddress[3], coderDAOAbi, connection);
     const filters = await coderDao.filters.ProposalCreated();
     const logs = await coderDao.queryFilter(filters, 0, 'latest');
     const events = logs.map((log) => coderDao.interface.parseLog(log));
@@ -67,21 +66,16 @@ export async function getStaticProps({ params }) {
   }
 }
 
-// This function gets called at build time
-export async function getStaticPaths() {
-  return { paths: [], fallback: true }
-}
-
 function ProposalDetails(props) {
   const onClientSide = typeof window !== 'undefined';
   const [voted, setVoted] = useState(false);
 
   if (onClientSide) {
-    const { account } = useWeb3React();
+    const { account, chainId } = useWeb3React();
 
     const checkDAO = async (account) => {
       if (account && props.proposal) {
-        const coderDao = new Contract(daoAddress, coderDAOAbi, connection);
+        const coderDao = new Contract(daoAddress[chainId], coderDAOAbi, connection);
         const voted = await coderDao.hasVoted(props.proposal.id, account);
         setVoted(voted);
       }

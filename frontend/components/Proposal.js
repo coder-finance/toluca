@@ -165,7 +165,7 @@ const FullView = ({ proposal, proposalState }) => {
 
 export default function ({ proposal, previewOnly }) {
   const [proposalState, setProposalState] = useState();
-  const { account, library } = useWeb3React();
+  const { account, chainId, library } = useWeb3React();
   const {
     register, handleSubmit, watch, formState: { errors }
   } = useForm();
@@ -173,10 +173,10 @@ export default function ({ proposal, previewOnly }) {
   const onSubmit = async (formData, e) => {
     const lib = await library;
 
-    const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
-    const tokenContract = new Contract(daoTokenAddress, coderDAOTokenAbi, lib.getSigner());
+    const coderDaoContract = new Contract(daoAddress[chainId], coderDAOAbi, lib.getSigner());
+    const tokenContract = new Contract(daoTokenAddress[chainId], coderDAOTokenAbi, lib.getSigner());
     const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
-    const proposalIdFromPartsU256 = genProposalId(proposal, transferCalldata);
+    const proposalIdFromPartsU256 = genProposalId(proposal, transferCalldata, library, chainId);
 
 
     console.log(104, proposalIdFromPartsU256);
@@ -203,7 +203,7 @@ export default function ({ proposal, previewOnly }) {
 
   const FullView = ({ proposal, proposalState }) => {
 
-    const { account, library } = useWeb3React();
+    const { account, chainId, library } = useWeb3React();
 
     const fetcher = async (proposal) => {
 
@@ -211,10 +211,10 @@ export default function ({ proposal, previewOnly }) {
       const lib = await library;
 
       // get from events the proposal details
-      const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
-      const tokenContract = new Contract(daoTokenAddress, coderDAOTokenAbi, lib.getSigner());
+      const coderDaoContract = new Contract(daoAddress[chainId], coderDAOAbi, lib.getSigner());
+      const tokenContract = new Contract(daoTokenAddress[chainId], coderDAOTokenAbi, lib.getSigner());
       const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
-      const proposalIdFromPartsU256 = genProposalId(proposal, transferCalldata, library);
+      const proposalIdFromPartsU256 = genProposalId(proposal, transferCalldata, library, chainId);
 
 
       const filters = await coderDaoContract.filters.VoteCast();
@@ -368,7 +368,7 @@ export default function ({ proposal, previewOnly }) {
     const ProposalRetrievalFn = async () => {
       if (account) {
         // The Contract object
-        const coderDao = new Contract(daoAddress, coderDAOAbi, connection);
+        const coderDao = new Contract(daoAddress[chainId], coderDAOAbi, connection);
         const state = await coderDao.state(proposal.id);
         setProposalState({ state });
       }

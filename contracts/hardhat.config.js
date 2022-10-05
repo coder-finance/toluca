@@ -8,6 +8,7 @@ require('@nomiclabs/hardhat-ethers');
 require('@openzeppelin/hardhat-upgrades');
 
 const deployerKeyRopsten = process.env.DEPLOYER_PRIVATE_KEY_ROPSTEN;
+const deployerKeyGoerli = process.env.DEPLOYER_PRIVATE_KEY_GOERLI;
 
 // This is a sample Buidler task. To learn how to create your own go to
 // https://buidler.dev/guides/create-task.html
@@ -39,6 +40,10 @@ module.exports = {
     ropsten: {
       url: process.env.NODE_URL_ROPSTEN,
       accounts: [deployerKeyRopsten],
+    },
+    goerli: {
+      url: process.env.NODE_URL_GOERLI,
+      accounts: [deployerKeyGoerli],
     },
     hardhat: {
     },

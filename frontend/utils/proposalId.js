@@ -4,12 +4,12 @@ import { daoTokenAddress } from '../constants';
 import coderDAOTokenAbi from '../abis/CoderDAOToken.json';
 
 
-export default async function (proposal, transferCalldata, library) {
+export default async function (proposal, transferCalldata, library, chainId) {
     const lib = await library;
 
     // TODO: Revise this, as it is currently defaulting token transfer 0
     // uint256 proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description)), keccak256(bytes(ipfsCid)));
-    const targets = [daoTokenAddress];
+    const targets = [daoTokenAddress[chainId]];
     const values = [0];
 
     // condensed version for queueing end executing

@@ -1,8 +1,8 @@
 import React from 'react'
-import {Box } from "rebass";
+import { Box } from "rebass";
 import { useWeb3React } from '@web3-react/core'
 
-import { checkChainSupported } from '../../utils';
+import { checkChainSupported, supportedChains } from '../../utils';
 
 export default () => {
   const { account, chainId } = useWeb3React()
@@ -16,6 +16,6 @@ export default () => {
       py: 1,
       borderRadius: 10,
     }} style={{ marginRight: '8px' }}>
-    {checkChainSupported(chainId) ? 'Ropsten' : 'Wrong Network'}
+    {checkChainSupported(chainId) ? supportedChains[chainId] : 'Wrong Network'}
   </Box> : null)
 }

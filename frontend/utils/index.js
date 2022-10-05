@@ -1,6 +1,11 @@
 import { NETWORK_ID_SUPPORTED } from '../constants';
 import genProposalIdFromParts from './proposalId';
 
+export const supportedChains = {
+  '3': 'Ropsten',
+  '5': 'Görli'
+};
+
 export const checkChainSupported = (id) => (NETWORK_ID_SUPPORTED.includes(id));
 
 const proposalStates = [

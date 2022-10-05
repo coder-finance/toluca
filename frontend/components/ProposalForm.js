@@ -36,7 +36,7 @@ export default function () {
   const [submittedProposal, setSubmittedProposal] = useState(null);
   const [blockchainValidation, setBlockchainValidation] = useState({ result: 'unverified' });
   const [markdownBody, setMarkdownBody] = useState('# Proposal Title');
-  const { account, library } = useWeb3React();
+  const { account, chainId, library } = useWeb3React();
 
   const submitProposalToBackend = async (data) => {
     if (!account) {
@@ -75,8 +75,8 @@ export default function () {
 
     const lib = await library;
 
-    const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
-    const tokenContract = new Contract(daoTokenAddress, coderDAOTokenAbi, lib.getSigner());
+    const coderDaoContract = new Contract(daoAddress[chainId], coderDAOAbi, lib.getSigner());
+    const tokenContract = new Contract(daoTokenAddress[chainId], coderDAOTokenAbi, lib.getSigner());
     const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
 
     // TODO: Revise this, as it is currently defaulting token transfer 0

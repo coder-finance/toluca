@@ -13,7 +13,7 @@ import { daoAddress } from '../constants';
 import coderDAOAbi from '../abis/CoderDAO.json';
 
 function HomeGallery(props) {
-  const { account, library } = useWeb3React();
+  const { account, chainId, library } = useWeb3React();
   const [proposals, setProposals] = useState([]);
 
   const fetcher = async () => {
@@ -22,7 +22,7 @@ function HomeGallery(props) {
     const lib = await library;
 
     // get from events the proposal details
-    const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
+    const coderDaoContract = new Contract(daoAddress[chainId], coderDAOAbi, lib.getSigner());
     const filters = await coderDaoContract.filters.ProposalCreated();
     const logs = await coderDaoContract.queryFilter(filters, 0, 'latest');
     const events = logs.map((log) => coderDaoContract.interface.parseLog(log));

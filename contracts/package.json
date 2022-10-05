@@ -9,6 +9,7 @@
     "compile": "npx hardhat compile",
     "compile:force": "npx hardhat compile --force",
     "deploy:ropsten": "npx hardhat run --network ropsten scripts/deploy.js",
+    "deploy:goerli": "npx hardhat run --network goerli scripts/deploy.js",
     "list:proposals": "npx hardhat run --network ropsten scripts/list-proposals.js",
     "remix": "remixd -s $(pwd) -u https://remix.ethereum.org"
   },

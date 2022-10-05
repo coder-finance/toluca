@@ -14,7 +14,7 @@ import { daoAddress } from '../constants';
 const connection = new providers.InfuraProvider('ropsten');
 
 const ProposalProgress = ({ proposal }) => {
-  const { account, library } = useWeb3React();
+  const { account, chainId, library } = useWeb3React();
   const [proposalLog, setProposalLog] = useState();
 
   // Only gets called when previewing (client-side)
@@ -25,7 +25,7 @@ const ProposalProgress = ({ proposal }) => {
         const lib = await library;
 
         // The Contract object
-        const coderDao = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
+        const coderDao = new Contract(daoAddress[chainId], coderDAOAbi, lib.getSigner());
 
         // TODO: refactor this to be DRY
         let filters = await coderDao.filters.ProposalCreated();
