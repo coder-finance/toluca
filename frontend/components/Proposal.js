@@ -16,7 +16,7 @@ import { ipfs, daoAddress, daoTokenAddress } from '../constants';
 import coderDAOAbi from '../abis/CoderDAO.json';
 import coderDAOTokenAbi from '../abis/CoderDAOToken.json';
 
-import { proposalStatus } from '../utils';
+import { proposalStatus, genProposalId } from '../utils';
 
 import { Label, Radio } from '@rebass/forms'
 import ProposalProgress from './ProposalProgress';
@@ -171,35 +171,12 @@ export default function ({ proposal, previewOnly }) {
   } = useForm();
 
   const onSubmit = async (formData, e) => {
-    console.log(102, formData, e);
     const lib = await library;
 
     const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
     const tokenContract = new Contract(daoTokenAddress, coderDAOTokenAbi, lib.getSigner());
-
-
-    // TODO: Revise this, as it is currently defaulting token transfer 0
-    // uint256 proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description)), keccak256(bytes(ipfsCid)));
-    const targets = [daoTokenAddress];
-    const values = [0];
     const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
-
-    console.log(103, proposal);
-
-    // condensed version for queueing end executing
-    const shortProposal = [
-      targets,
-      values,
-      [transferCalldata],
-      utils.id(proposal.title),
-      utils.id(proposal.hash)
-    ];
-
-    const proposalPartsEncoded = utils.defaultAbiCoder.encode(
-      ['address[]', 'uint256[]', 'bytes[]', 'bytes32', 'bytes32'],
-      shortProposal,
-    );
-    const proposalIdFromPartsU256 = BigNumber.from(utils.keccak256(proposalPartsEncoded));
+    const proposalIdFromPartsU256 = genProposalId(proposal, transferCalldata);
 
 
     console.log(104, proposalIdFromPartsU256);
@@ -221,13 +198,54 @@ export default function ({ proposal, previewOnly }) {
     let voteTx = await coderDaoContract.castVote(proposalIdFromPartsU256, voteValueInt);
 
     console.log(103, voteTx);
-
-    const txnResult = await submitProposalToBlockchain(data, res.ipfs, coderDaoContract);
-    setSubmittedProposal(res);
   };
 
 
   const FullView = ({ proposal, proposalState }) => {
+
+    const { account, library } = useWeb3React();
+
+    const fetcher = async (proposal) => {
+
+      if (!account) return;
+      const lib = await library;
+
+      // get from events the proposal details
+      const coderDaoContract = new Contract(daoAddress, coderDAOAbi, lib.getSigner());
+      const tokenContract = new Contract(daoTokenAddress, coderDAOTokenAbi, lib.getSigner());
+      const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
+      const proposalIdFromPartsU256 = genProposalId(proposal, transferCalldata, library);
+
+
+      const filters = await coderDaoContract.filters.VoteCast();
+      const logs = await coderDaoContract.queryFilter(filters, 0, 'latest');
+      const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
+
+      console.log(700, events);
+
+      const votes = events.map((e) => {
+        const title = e.args.description;
+        const hash = e.args.ipfsCid;
+
+        return ({
+          id: e.args.proposalId.toHexString(),
+          description: e.args.description,
+          title,
+          hash,
+          meta: `${e.args.proposalId.toString()} meta`
+        })
+      });
+
+      // latest state of proposal
+      // setProposals(proposals);
+    }
+    useEffect(() => {
+      fetcher(proposal);
+    }, [account]);
+
+
+
+
     const proposalStatusLabel = proposal && (proposal.state || proposalState) && proposalStatus(parseInt(proposal.state || proposalState.state));
     return (
       <>
@@ -342,6 +360,7 @@ export default function ({ proposal, previewOnly }) {
       </>)
   }
 
+
   // Only gets called when previewing (client-side)
   useEffect(() => {
     if (!previewOnly) return;
@@ -356,6 +375,7 @@ export default function ({ proposal, previewOnly }) {
     };
     ProposalRetrievalFn();
   }, []);
+
 
   if (!proposal) return (<>Loading...</>);
 
