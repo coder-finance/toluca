@@ -47,14 +47,14 @@ function HomeGallery(props) {
 
   useEffect(() => {
     fetcher();
-  }, [account]);
+  }, [account, chainId]);
 
   return (
     <Flex flexWrap="wrap">
       {proposals
         && proposals.map((proposal, i) => (
           <FlexBox key={i} width={[1, 1 / 2]} p={3}>
-            <Link href={`/proposals/${proposal.id}`}>
+            <Link href={`/proposals/${proposal.id}?chainId=${chainId}`}>
               <Box>
                 <Card
                   sx={{
