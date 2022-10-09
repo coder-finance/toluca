@@ -4,10 +4,12 @@ import { useWeb3React } from '@web3-react/core';
 import {
   Box,
   Heading,
-  Label,
-  Radio,
   Button
 } from 'rebass';
+import {
+  Label,
+  Radio,
+} from '@rebass/forms';
 import { BigNumber, Contract, providers, utils } from 'ethers';
 import { ipfs, daoAddress, daoTokenAddress, targetNetworkId } from '../constants';
 import coderDAOAbi from '../abis/CoderDAO.json';
