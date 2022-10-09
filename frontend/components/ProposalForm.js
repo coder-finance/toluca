@@ -22,12 +22,12 @@ import {
 
 import { useWeb3React } from '@web3-react/core';
 
-import { coderdao, daoAddress, daoTokenAddress } from '../constants';
+import { coderdao, daoAddress, daoTokenAddress, targetNetworkId } from '../constants';
 import coderDAOAbi from '../abis/CoderDAO.json';
 import coderDAOTokenAbi from '../abis/CoderDAOToken.json';
 
 // TODO: make this available for different networks
-const connection = new providers.InfuraProvider('ropsten');
+const connection = new providers.InfuraProvider(targetNetworkId);
 
 export default function () {
   const {
@@ -80,7 +80,7 @@ export default function () {
     const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
 
     // TODO: Revise this, as it is currently defaulting token transfer 0
-    const targets = [daoTokenAddress];
+    const targets = [daoTokenAddress[chainId]];
     const values = [0];
 
     const result = await ProposalCheckFn(formData, coderDaoContract);

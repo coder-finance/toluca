@@ -9,9 +9,9 @@ import { Contract, providers } from 'ethers';
 import { useWeb3React } from '@web3-react/core';
 
 import coderDAOAbi from '../abis/CoderDAO.json';
-import { daoAddress } from '../constants';
+import { daoAddress, targetNetworkId } from '../constants';
 
-const connection = new providers.InfuraProvider('ropsten');
+const connection = new providers.InfuraProvider(targetNetworkId);
 
 const ProposalProgress = ({ proposal }) => {
   const { account, chainId, library } = useWeb3React();
@@ -20,7 +20,7 @@ const ProposalProgress = ({ proposal }) => {
   // Only gets called when previewing (client-side)
   useEffect(() => {
     const ProposalRetrievalFn = async () => {
-      
+
       if (account) {
         const lib = await library;
 
@@ -59,8 +59,10 @@ const ProposalProgress = ({ proposal }) => {
         console.error('proposalmerged', proposal.id, proposalMergedEvent);
         const proposalMergedText = proposalMergedEvent.length > 0 ? `Merged on block ${proposalMergedEvent[0].blockNumber}` : '';
 
-        setProposalLog({ progress: [proposalCreatedText, proposalCancelledText, proposalExecutedText, 
-          proposalVerifiedText, proposalMergedText], createdBy: txCreated.from });
+        setProposalLog({
+          progress: [proposalCreatedText, proposalCancelledText, proposalExecutedText,
+            proposalVerifiedText, proposalMergedText], createdBy: txCreated.from
+        });
       }
     };
 

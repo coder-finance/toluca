@@ -12,7 +12,7 @@ import { Flex, Box as FlexBox } from 'reflexbox';
 import { useWeb3React } from '@web3-react/core';
 import ReactMarkdown from 'react-markdown';
 
-import { ipfs, daoAddress, daoTokenAddress } from '../constants';
+import { ipfs, daoAddress, daoTokenAddress, targetNetworkId } from '../constants';
 import coderDAOAbi from '../abis/CoderDAO.json';
 import coderDAOTokenAbi from '../abis/CoderDAOToken.json';
 
@@ -22,7 +22,7 @@ import { Label, Radio } from '@rebass/forms'
 import ProposalProgress from './ProposalProgress';
 import ProposalContributionForm from './ProposalContributionForm';
 
-const connection = new providers.InfuraProvider('ropsten');
+const connection = new providers.InfuraProvider(targetNetworkId);
 
 const Content = ({ content }) => (<Box px={2}>
   <ReactMarkdown>{content.body}</ReactMarkdown>

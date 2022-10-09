@@ -4,16 +4,19 @@ import { Contract, providers, utils } from 'ethers';
 import { useWeb3React } from '@web3-react/core';
 import Proposal from '../../components/Proposal'
 import ProposalVoteStatus from '../../components/ProposalVoteStatus';
-import { daoAddress, ipfs } from '../../constants';
+import { daoAddress, ipfs, targetNetworkId } from '../../constants';
 import coderDAOAbi from '../../abis/CoderDAO.json';
 
-const connection = new providers.InfuraProvider('ropsten');
+const connection = new providers.InfuraProvider(targetNetworkId);
 
 // This also gets called at build time
 export async function getServerSideProps({ params, query }) {
   const ProposalRetrievalFn = async () => {
     // The Contract object
-    const coderDao = new Contract(daoAddress[3], coderDAOAbi, connection);
+    // const { chainId } = useWeb3React();
+    const chainId = 5; // https://github.com/eth-clients/goerli
+
+    const coderDao = new Contract(daoAddress[chainId], coderDAOAbi, connection);
     const filters = await coderDao.filters.ProposalCreated();
     const logs = await coderDao.queryFilter(filters, 0, 'latest');
     const events = logs.map((log) => coderDao.interface.parseLog(log));

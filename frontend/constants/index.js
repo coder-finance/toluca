@@ -18,3 +18,5 @@ export const daoAddress = {
   3: '0x1Da24De6E06e3E45B4E9CC5Fde328a38BdA8c36B',
   5: '0x9C963DD4EBa51B71Cdc6DA451D26B49b6548dE65'
 };
+
+export const targetNetworkId = "goerli";
