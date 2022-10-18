@@ -1,7 +1,6 @@
 import { BigNumber, Contract, providers, utils } from 'ethers';
 
 import { daoTokenAddress } from '../constants';
-import coderDAOTokenAbi from '../abis/CoderDAOToken.json';
 
 
 export default async function (proposal, transferCalldata, library, chainId) {
