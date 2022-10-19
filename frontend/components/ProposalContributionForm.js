@@ -77,6 +77,8 @@ export default function ({ proposal, lastAttemptNumber }) {
     );
   }
 
+  // Either succeeded or queued
+  // TODO: refactor this
   const canContribute = proposal.state === 4
   || proposal.state === 5;
 
@@ -95,7 +97,7 @@ export default function ({ proposal, lastAttemptNumber }) {
             {blockchainValidation.error}
           </span>
         )}
-        { canContribute && <Box
+        { !canContribute && <Box
           as="form"
           onSubmit={handleSubmit(onSubmit)}
           py={3}

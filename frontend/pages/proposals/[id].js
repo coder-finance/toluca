@@ -85,10 +85,11 @@ function ProposalDetails(props) {
         const filters = await coderDao.filters.ProposalContributionLodged();
         const logs = await coderDao.queryFilter(filters, 0, 'latest');
         const events = logs.map((log) => coderDao.interface.parseLog(log))
-          .filter((e) => e.args.proposalId === props.proposal.id);
+          .filter((e) => e.args.proposalId.toHexString() === props.proposal.id
+          && e.args.lodger === account);
 
-        console.error('ProposalContributionCheckFn', logs);
-        events.length > 0 && setLastAttemptNumber(events.length - 1);
+        events.length > 0 && setLastAttemptNumber(events.length);
+        console.error('lastAttemptNumber', events.length);
       }
     }
 

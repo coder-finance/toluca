@@ -46,7 +46,7 @@ describe("CoderDAO", function () {
   })
 
   describe("Deployment", function () {
-    it("Should set the right name", async function () {
+    it("Should go through happy path", async function () {
       const [owner, proposer, voter1, voter2, voter3, voter4, team, contributor1] = await ethers.getSigners();
 
       const token_instance = await upgrades.deployProxy(this.token, { kind: 'uups' });

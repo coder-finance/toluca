@@ -4,7 +4,7 @@ export const ipfs = {
 };
 
 export const coderdao = {
-  version: '0.4.0',
+  version: '0.4.2',
   proposalVersion: 1,
   pullRequestRegex: /^https:\/\/github\.com\/[\w'-]+\/[\w'-]+\/pull\/\d+/i
 }
