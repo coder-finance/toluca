@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import {
   Box,
   Card,
-  Button,
   Heading,
   Text
 } from 'rebass';
