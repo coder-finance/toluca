@@ -6,6 +6,7 @@ export const ipfs = {
 export const coderdao = {
   version: '0.4.0',
   proposalVersion: 1,
+  pullRequestRegex: /^https:\/\/github\.com\/[\w'-]+\/[\w'-]+\/pull\/\d+/i
 }
 
 export const NETWORK_ID_SUPPORTED = [3, 5];

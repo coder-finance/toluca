@@ -163,7 +163,7 @@ const FullView = ({ proposal, proposalState }) => {
     </>)
 }
 
-export default function ({ proposal, previewOnly }) {
+export default function ({ proposal, previewOnly, lastAttemptNumber }) {
   const [proposalState, setProposalState] = useState();
   const { account, chainId, library } = useWeb3React();
   const {
@@ -250,7 +250,7 @@ export default function ({ proposal, previewOnly }) {
         </Flex>
 
         <ProposalVoting proposal={proposal} />
-        <ProposalContributionForm proposal={proposal} />
+        <ProposalContributionForm proposal={proposal} lastAttemptNumber={lastAttemptNumber} />
         <ProposalProgress proposal={proposal} />
       </>)
   }

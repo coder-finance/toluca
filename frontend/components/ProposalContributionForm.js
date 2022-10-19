@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Contract, providers, utils } from 'ethers';
-import ReactMarkdown from 'react-markdown';
 import {
   Box,
   Card,
@@ -22,58 +21,44 @@ import {
 
 import { useWeb3React } from '@web3-react/core';
 
-import { coderdao, daoAddress, daoTokenAddress } from '../constants';
+import { coderdao, daoAddress } from '../constants';
 import coderDAOAbi from '../abis/CoderDAO.json';
-import coderDAOTokenAbi from '../abis/CoderDAOToken.json';
+import { proposalStatus } from '../utils';
 
-export default function () {
+export default function ({ proposal, lastAttemptNumber }) {
   const {
     register, handleSubmit, watch, formState: { errors }
   } = useForm();
   const [submittedContribution, setSubmittedContribution] = useState(null);
   const [blockchainValidation, setBlockchainValidation] = useState({ result: 'unverified' });
-  const [markdownBody, setMarkdownBody] = useState('# Proposal Title');
   const { account, chainId, library } = useWeb3React();
 
   const submitContributionToBlockchain = async (formData, coderDaoContract) => {
-    alert('TODO: uncomment below once contract upgraded')
-   console.error(999, "submitContributionToBlockchain", formData.pullRequestUrl)
+    const matched = formData.pullRequestUrl.match(coderdao.pullRequestRegex);
+    console.error(999, "submitContributionToBlockchain", matched, proposal)
+    const slugs = formData.pullRequestUrl.split('/');
+    console.error(98899, slugs, slugs[slugs.length - 1], lastAttemptNumber)
     // The Contract object
-    // const response = await coderDaoContract.lodgeContribution(
-    //   proposal.contract.targets,
-    //   proposal.contract.values,
-    //   [proposal.contract.transferCalldata],
-    //   utils.id(proposal.title),
-    //   utils.id(repositoryUrl),
-    //   42069,
-    //   1,
-    //   1
-    // );
-    // return response;
+    const response = await coderDaoContract.lodgeContribution(
+      proposal.content.contract.targets,
+      proposal.content.contract.values,
+      [proposal.content.contract.transferCalldata],
+      utils.id(proposal.content.title),
+      proposal.hash,
+      utils.id(proposal.content.githubRepoUrl),
+      slugs[slugs.length - 1],
+      coderdao.proposalVersion,
+      lastAttemptNumber + 1
+    );
+    return response;
   };
 
   const onSubmit = async (formData) => {
-    if (markdownBody.length <= 0) return;
-
     const lib = await library;
 
     const coderDaoContract = new Contract(daoAddress[chainId], coderDAOAbi, lib.getSigner());
     const txnResult = await submitContributionToBlockchain(formData, coderDaoContract);
     setSubmittedContribution(txnResult);
-  };
-
-  const ProposalCheckFn = async (proposal, coderDaoContract) => {
-    const lib = await library;
-
-    // check for duplicates
-    const filters = await coderDaoContract.filters.ProposalCreated();
-    const logs = await coderDaoContract.queryFilter(filters, 0, 'latest');
-    const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
-
-    const duplicate = events.map((e) => (e.args.description === proposal.title)).includes(true);
-
-    if (duplicate) return { result: 'error', error: 'duplicateEntry' };
-    return { result: 'ok' };
   };
 
   if (submittedContribution !== null && blockchainValidation.result === 'ok') {
@@ -92,6 +77,9 @@ export default function () {
     );
   }
 
+  const canContribute = proposal.state === 4
+  || proposal.state === 5;
+
   return (
     <Box>
       <Card
@@ -107,7 +95,7 @@ export default function () {
             {blockchainValidation.error}
           </span>
         )}
-        <Box
+        { canContribute && <Box
           as="form"
           onSubmit={handleSubmit(onSubmit)}
           py={3}
@@ -119,9 +107,9 @@ export default function () {
                 id="pullRequestUrl"
                 name="pullRequestUrl"
                 type="url"
-                {...register('pullRequestUrl', { required: true })}
+                {...register('pullRequestUrl', { required: true, pattern: coderdao.pullRequestRegex })}
               />
-              {errors.pullRequestUrl && <span>Pull Request URL is required</span>}
+              {errors.pullRequestUrl && <span>Pull Request URL is required and must be in the format of: https://github.com/$USER/$REPO/pull/$PULL_REQUEST_NUMBER </span>}
             </Box>
             <Box px={2} ml="auto">
               <Button>
@@ -129,7 +117,7 @@ export default function () {
               </Button>
             </Box>
           </Flex>
-        </Box>
+        </Box>}
       </Card>
     </Box>
   );

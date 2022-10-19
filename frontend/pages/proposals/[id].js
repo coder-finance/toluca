@@ -9,7 +9,7 @@ import coderDAOAbi from '../../abis/CoderDAO.json';
 
 const connection = new providers.InfuraProvider(targetNetworkId);
 
-// This also gets called at build time
+// This also gets called on server side
 export async function getServerSideProps({ params, query }) {
   const ProposalRetrievalFn = async () => {
     // The Contract object
@@ -72,15 +72,23 @@ export async function getServerSideProps({ params, query }) {
 function ProposalDetails(props) {
   const onClientSide = typeof window !== 'undefined';
   const [voted, setVoted] = useState(false);
+  const [lastAttemptNumber, setLastAttemptNumber] = useState(0);
 
   if (onClientSide) {
-    const { account, chainId } = useWeb3React();
+    const { account, library, chainId } = useWeb3React();
 
     const checkDAO = async (account) => {
       if (account && props.proposal) {
         const coderDao = new Contract(daoAddress[chainId], coderDAOAbi, connection);
         const voted = await coderDao.hasVoted(props.proposal.id, account);
         setVoted(voted);
+        const filters = await coderDao.filters.ProposalContributionLodged();
+        const logs = await coderDao.queryFilter(filters, 0, 'latest');
+        const events = logs.map((log) => coderDao.interface.parseLog(log))
+          .filter((e) => e.args.proposalId === props.proposal.id);
+
+        console.error('ProposalContributionCheckFn', logs);
+        events.length > 0 && setLastAttemptNumber(events.length - 1);
       }
     }
 
@@ -90,7 +98,7 @@ function ProposalDetails(props) {
   return (
     <>
       {voted && <ProposalVoteStatus />}
-      <Proposal proposal={props.proposal} />
+      <Proposal proposal={props.proposal} lastAttemptNumber={lastAttemptNumber} />
     </>
   );
 }
