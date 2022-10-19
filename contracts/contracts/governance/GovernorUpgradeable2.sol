@@ -531,15 +531,19 @@ abstract contract GovernorUpgradeable2 is Initializable, ContextUpgradeable, ERC
         uint256 pullRequestNumber,
         uint256 ipfsPayloadVersion,
         uint256 attemptNumber
-    ) public virtual returns (uint256) {
-        // TODO: guard against non-existent proposals
-        
+    ) public virtual returns (uint256) {       
         uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash, keccak256(bytes(ipfsCid)));
         uint256 contribId = hashProposalContribution(targets, values, calldatas, descriptionHash, keccak256(bytes(ipfsCid)), msg.sender, attemptNumber);
 
         require(targets.length == values.length, "Governor: invalid proposal length");
         require(targets.length == calldatas.length, "Governor: invalid proposal length");
         require(targets.length > 0, "Governor: empty proposal");
+
+        ProposalState status = state(proposalId);
+        require(
+            status == ProposalState.Succeeded || status == ProposalState.Queued,
+            "Governor: proposal not successful"
+        );
 
         ProposalContribution storage contrib = _contributions[contribId];
         require(contrib.lodged == false, "Governor: contribution already exists");

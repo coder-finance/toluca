@@ -47,7 +47,7 @@ describe("CoderDAO", function () {
 
   describe("Deployment", function () {
     it("Should set the right name", async function () {
-      const [owner, proposer, voter1, voter2, voter3, voter4, team] = await ethers.getSigners();
+      const [owner, proposer, voter1, voter2, voter3, voter4, team, contributor1] = await ethers.getSigners();
 
       const token_instance = await upgrades.deployProxy(this.token, { kind: 'uups' });
       const instance = await upgrades.deployProxy(this.dao, [token_instance.address, 1], { kind: 'uups' });
@@ -117,7 +117,7 @@ describe("CoderDAO", function () {
       const proposalReceipt = await proposalTx.wait(1);
       await network.provider.send('evm_mine');
       const proposalId = proposalReceipt.events[0].args.proposalId;
-      console.log(202, proposalReceipt.events);
+      console.log(202, proposalId.toHexString(), proposalReceipt.events);
       let proposalState = await instance.state(proposalId);
       assert.equal(proposalState, '0');
 
@@ -130,7 +130,7 @@ describe("CoderDAO", function () {
         ethers.utils.id(proposalDesc),
         ethers.utils.id(ipfsCid)
       );
-      console.log(105, proposalIdHashedBYContract)
+      console.log(105, proposalIdHashedBYContract.toHexString())
       assert(proposalIdHashedBYContract.eq(proposalId), "proposal Id hashed by the contract")
 
       // uint256 proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description)), keccak256(bytes(ipfsCid)));
@@ -196,7 +196,7 @@ describe("CoderDAO", function () {
         [0],
         [transferCalldata],
         descriptionHash,
-        ipfsHash,
+        ipfsCid,
         repositoryId,
         pullRequestNumber,
         1,
