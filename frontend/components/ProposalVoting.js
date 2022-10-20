@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useWeb3React } from '@web3-react/core';
 import {
-  Box,
+  Box, Card,
   Heading,
   Button
 } from 'rebass';
@@ -45,7 +45,6 @@ export default function ({ proposal }) {
   };
 
   const fetcher = async (proposal) => {
-
     if (!account) return;
     const lib = await library;
 
@@ -95,12 +94,26 @@ export default function ({ proposal }) {
       return (
         <Box p={3}>You voted <Box p={1} bg="green" display='inline-block'>{voteStringFromInt(props.votingState.vote)}</Box> with weight {props.votingState.weight}</Box>
       )
-
+    }
+    if (props.proposal.state != "1") {
+      return (
+        <Card p={3}>Voting is not active: <Box
+          sx={{
+            display: 'inline-block',
+            color: 'white',
+            bg: 'primary',
+            px: 2,
+            py: 1,
+            borderRadius: 9999,
+          }}>
+          {proposalStatus(parseInt(proposal.state))}
+        </Box></Card>
+      )
     }
   };
 
   const VotingForm = (props) => {
-    if (props.votingState) {
+    if (props.votingState || props.proposal.state !== "1") {
       return (<></>)
     }
 
@@ -145,8 +158,8 @@ export default function ({ proposal }) {
   };
   return (
     <>
-      <VotingState votingState={votingState} />
-      <VotingForm votingState={votingState} votingPower={votingPower} />
+      <VotingState votingState={votingState} proposal={proposal} />
+      <VotingForm votingState={votingState} votingPower={votingPower} proposal={proposal} />
     </>
 
   )
