@@ -18,6 +18,7 @@ export default function ({ proposal }) {
     console.info('todo: onConfirm')
   };
 
+  // TODO: refactor
   if (account !== '0xce1B9e1900108Cb779699319B1E37897d1E65c2B') return null;
 
   return (
