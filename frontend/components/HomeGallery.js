@@ -36,8 +36,6 @@ function HomeGallery(props) {
         description: e.args.description,
         title,
         hash,
-        image: 'QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B',
-        meta: `${e.args.proposalId.toString()} meta`
       })
     });
 

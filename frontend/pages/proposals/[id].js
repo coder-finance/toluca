@@ -2,8 +2,12 @@ import { useState } from 'react';
 import { Contract, providers, utils } from 'ethers';
 
 import { useWeb3React } from '@web3-react/core';
+
 import Proposal from '../../components/Proposal'
 import ProposalVoteStatus from '../../components/ProposalVoteStatus';
+import ProposalVoting from '../../components/ProposalVoting';
+import ProposalContributionForm from '../../components/ProposalContributionForm';
+import ProposalProgress from '../../components/ProposalProgress';
 import DebugPanel from '../../components/DebugPanel';
 import { daoAddress, ipfs, targetNetworkId } from '../../constants';
 import coderDAOAbi from '../../abis/CoderDAO.json';
@@ -31,8 +35,6 @@ export async function getServerSideProps({ params, query }) {
         description: e.args.description,
         title,
         hash,
-        image: 'QmNQUjin6asb6SqQn7Hkqqw6LfLWQhD4ZTaSmdyAxcbw4B',
-        meta: `${e.args.proposalId.toString()} meta`
       })
     }).filter((e) => e.id === params.id);
 
@@ -98,7 +100,10 @@ function ProposalDetails(props) {
   return (
     <>
       {voted && <ProposalVoteStatus />}
-      <Proposal proposal={props.proposal} detectedContributions={detectedContributions} />
+      <Proposal proposal={props.proposal} />
+      <ProposalVoting proposal={props.proposal} />
+      <ProposalContributionForm proposal={props.proposal} detectedContributions={detectedContributions} />
+      <ProposalProgress proposal={props.proposal} />
       <DebugPanel/>
     </>
   );

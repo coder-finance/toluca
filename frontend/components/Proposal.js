@@ -18,9 +18,7 @@ import coderDAOTokenAbi from '../abis/CoderDAOToken.json';
 import { proposalStatus, genProposalId } from '../utils';
 
 import { Label, Radio } from '@rebass/forms'
-import ProposalVoting from './ProposalVoting';
 import ProposalProgress from './ProposalProgress';
-import ProposalContributionForm from './ProposalContributionForm';
 
 const connection = new providers.InfuraProvider(targetNetworkId);
 
@@ -163,15 +161,12 @@ const FullView = ({ proposal, proposalState }) => {
     </>)
 }
 
-export default function ({ proposal, previewOnly, detectedContributions }) {
+export default function ({ proposal, previewOnly }) {
   const [proposalState, setProposalState] = useState();
   const { account, chainId, library } = useWeb3React();
   const {
     register, handleSubmit, watch, formState: { errors }
   } = useForm();
-
-
-
 
   const FullView = ({ proposal, proposalState }) => {
 
@@ -248,10 +243,6 @@ export default function ({ proposal, previewOnly, detectedContributions }) {
             Merged
           </Box>
         </Flex>
-
-        <ProposalVoting proposal={proposal} />
-        <ProposalContributionForm proposal={proposal} detectedContributions={detectedContributions} />
-        <ProposalProgress proposal={proposal} />
       </>)
   }
 
