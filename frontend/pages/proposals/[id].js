@@ -72,7 +72,7 @@ export async function getServerSideProps({ params, query }) {
 function ProposalDetails(props) {
   const onClientSide = typeof window !== 'undefined';
   const [voted, setVoted] = useState(false);
-  const [lastAttemptNumber, setLastAttemptNumber] = useState(0);
+  const [detectedContributions, setDetectedContributions] = useState([]);
 
   if (onClientSide) {
     const { account, library, chainId } = useWeb3React();
@@ -88,7 +88,7 @@ function ProposalDetails(props) {
           .filter((e) => e.args.proposalId.toHexString() === props.proposal.id
           && e.args.lodger === account);
 
-        events.length > 0 && setLastAttemptNumber(events.length);
+        events.length > 0 && setDetectedContributions(events);
         console.error('lastAttemptNumber', events.length);
       }
     }
@@ -99,7 +99,7 @@ function ProposalDetails(props) {
   return (
     <>
       {voted && <ProposalVoteStatus />}
-      <Proposal proposal={props.proposal} lastAttemptNumber={lastAttemptNumber} />
+      <Proposal proposal={props.proposal} detectedContributions={detectedContributions} />
     </>
   );
 }

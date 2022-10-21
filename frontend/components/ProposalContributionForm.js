@@ -25,7 +25,7 @@ import { coderdao, daoAddress } from '../constants';
 import coderDAOAbi from '../abis/CoderDAO.json';
 import { proposalStatus } from '../utils';
 
-export default function ({ proposal, lastAttemptNumber }) {
+export default function ({ proposal, detectedContributions }) {
   const {
     register, handleSubmit, watch, formState: { errors }
   } = useForm();
@@ -37,7 +37,9 @@ export default function ({ proposal, lastAttemptNumber }) {
     const matched = formData.pullRequestUrl.match(coderdao.pullRequestRegex);
     console.error(999, "submitContributionToBlockchain", matched, proposal)
     const slugs = formData.pullRequestUrl.split('/');
-    console.error(98899, slugs, slugs[slugs.length - 1], lastAttemptNumber)
+    console.error(98899, slugs, slugs[slugs.length - 1], detectedContributions)
+    const lastAttemptNumber = detectedContributions.length;
+
     // The Contract object
     const response = await coderDaoContract.lodgeContribution(
       proposal.content.contract.targets,
@@ -97,6 +99,9 @@ export default function ({ proposal, lastAttemptNumber }) {
             {blockchainValidation.error}
           </span>
         )}
+        {detectedContributions.length > 0 && 
+          <Box>Contribution detected, attempted times: {detectedContributions.length}</Box>
+        }
         { !canContribute && <Box
           as="form"
           onSubmit={handleSubmit(onSubmit)}
