@@ -4,6 +4,7 @@ import { Contract, providers, utils } from 'ethers';
 import { useWeb3React } from '@web3-react/core';
 import Proposal from '../../components/Proposal'
 import ProposalVoteStatus from '../../components/ProposalVoteStatus';
+import DebugPanel from '../../components/DebugPanel';
 import { daoAddress, ipfs, targetNetworkId } from '../../constants';
 import coderDAOAbi from '../../abis/CoderDAO.json';
 
@@ -98,6 +99,7 @@ function ProposalDetails(props) {
     <>
       {voted && <ProposalVoteStatus />}
       <Proposal proposal={props.proposal} detectedContributions={detectedContributions} />
+      <DebugPanel/>
     </>
   );
 }
