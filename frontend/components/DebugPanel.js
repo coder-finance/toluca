@@ -11,11 +11,11 @@ export default function ({ proposal }) {
   };
 
   const onVerify = () => {
-    console.info('todo: onExecute')
+    console.info('todo: onVerify')
   };
 
   const onConfirm = () => {
-    console.info('todo: onExecute')
+    console.info('todo: onConfirm')
   };
 
   if (account !== '0xce1B9e1900108Cb779699319B1E37897d1E65c2B') return null;
