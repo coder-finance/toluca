@@ -1,11 +1,8 @@
-import { BigNumber, Contract, providers, utils } from 'ethers';
-
+import { BigNumber, utils } from 'ethers';
 import { daoTokenAddress } from '../constants';
 
 
 export default async function (proposal, transferCalldata, library, chainId) {
-    const lib = await library;
-
     // TODO: Revise this, as it is currently defaulting token transfer 0
     // uint256 proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description)), keccak256(bytes(ipfsCid)));
     const targets = [daoTokenAddress[chainId]];

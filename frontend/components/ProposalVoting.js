@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useWeb3React } from '@web3-react/core';
 import {
-  Box,
+  Box, Card,
   Heading,
   Button
 } from 'rebass';
@@ -26,6 +26,7 @@ export default function ({ proposal }) {
   } = useForm();
 
   const [votingState, setVotingState] = useState();
+  const [votingPower, setVotingPower] = useState();
 
   const onSubmit = async (formData, e) => {
     const lib = await library;
@@ -34,13 +35,16 @@ export default function ({ proposal }) {
     const transferCalldata = tokenContract.interface.encodeFunctionData('transfer', ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', 1]);
     const proposalIdFromPartsU256 = genProposalId(proposal, transferCalldata, library, chainId);
 
-    const r = voteIntFromLabel(formData.voteValue);
-    let voteTx = await coderDaoContract.castVote(proposalIdFromPartsU256, r);
+    const accountAddress = await lib.getSigner().getAddress();
+    console.log("Signer", accountAddress)
+    let delegateTx = await tokenContract.delegate(accountAddress);
+    console.log("DelegateTx", delegateTx);
+
+    let voteTx = await coderDaoContract.castVote(proposalIdFromPartsU256, voteIntFromLabel(formData.voteValue));
     console.log("VoteTx", voteTx);
   };
 
   const fetcher = async (proposal) => {
-
     if (!account) return;
     const lib = await library;
 
@@ -70,6 +74,15 @@ export default function ({ proposal }) {
       votingState = {}
     }
     setVotingState(votingState)
+
+    const votingPower = await tokenContract.getVotes(lib.getSigner().getAddress());
+    console.log("VotingPower", votingPower)
+    if (votingPower) {
+      setVotingPower(votingPower.div(BigNumber.from(10).pow(18)).toString())
+    } else {
+      setVotingPower("0")
+    }
+
   }
 
   useEffect(() => {
@@ -81,18 +94,32 @@ export default function ({ proposal }) {
       return (
         <Box p={3}>You voted <Box p={1} bg="green" display='inline-block'>{voteStringFromInt(props.votingState.vote)}</Box> with weight {props.votingState.weight}</Box>
       )
-
+    }
+    if (props.proposal.state != "1") {
+      return (
+        <Card p={3}>Voting is not active: <Box
+          sx={{
+            display: 'inline-block',
+            color: 'white',
+            bg: 'primary',
+            px: 2,
+            py: 1,
+            borderRadius: 9999,
+          }}>
+          {proposalStatus(parseInt(proposal.state))}
+        </Box></Card>
+      )
     }
   };
 
   const VotingForm = (props) => {
-    if (props.votingState) {
+    if (props.votingState || props.proposal.state !== "1") {
       return (<></>)
     }
 
     return (
       <Box p={3}>
-        <Heading p={1}>Your vote:</Heading>
+        <Heading p={1}>Your vote (weight = {votingPower}):</Heading>
         <Box as="form"
           onSubmit={handleSubmit(onSubmit, (e) => console.error)}>
           <Label p={1}>
@@ -131,8 +158,8 @@ export default function ({ proposal }) {
   };
   return (
     <>
-      <VotingState votingState={votingState} />
-      <VotingForm votingState={votingState} />
+      <VotingState votingState={votingState} proposal={proposal} />
+      <VotingForm votingState={votingState} votingPower={votingPower} proposal={proposal} />
     </>
 
   )

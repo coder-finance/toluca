@@ -80,13 +80,11 @@ function ProposalDetails(props) {
     const checkDAO = async (account) => {
       if (account && props.proposal) {
         const coderDao = new Contract(daoAddress[chainId], coderDAOAbi, connection);
-        const voted = await coderDao.hasVoted(props.proposal.id, account);
-        setVoted(voted);
         const filters = await coderDao.filters.ProposalContributionLodged();
         const logs = await coderDao.queryFilter(filters, 0, 'latest');
         const events = logs.map((log) => coderDao.interface.parseLog(log))
           .filter((e) => e.args.proposalId.toHexString() === props.proposal.id
-          && e.args.lodger === account);
+            && e.args.lodger === account);
 
         events.length > 0 && setDetectedContributions(events);
         console.error('lastAttemptNumber', events.length);
