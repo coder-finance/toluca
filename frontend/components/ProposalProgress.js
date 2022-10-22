@@ -49,7 +49,14 @@ const ProposalProgress = ({ proposal }) => {
           const proposalExecutedEvent = logsExecuted.filter(e => e.args[0].toHexString() === proposal.id).map(e => `Executed on block #${e}`);;
           console.error('proposalexecuted', proposal.id, proposalExecutedEvent);
           const proposalExecutedText = proposalExecutedEvent.length > 0 ? `Executed on block ${proposalExecutedEvent[0].blockNumber}` : '';
-  
+
+          filters = await coderDao.filters.ProposalContributionLodged();
+          const logsLodged = await coderDao.queryFilter(filters, 0, 'latest');
+          const proposalContribLodgedEvent = logsLodged.filter(e => e.args[0].toHexString() === proposal.id);
+          console.error('proposalcontriblodged', proposal.id, proposalContribLodgedEvent);
+          const proposalContribLodgedText = proposalContribLodgedEvent.length > 0 ? proposalContribLodgedEvent.map(e => `Contribution Lodged by ${e.args.lodger} on block ${e.blockNumber}`)  : '';
+
+
           filters = await coderDao.filters.ProposalVerified();
           const logsVerified = await coderDao.queryFilter(filters, 0, 'latest');
           const proposalVerifiedEvent = logsVerified.filter(e => e.args[0].toHexString() === proposal.id).map(e => `Verified on block #${e}`);;
@@ -63,7 +70,7 @@ const ProposalProgress = ({ proposal }) => {
           const proposalMergedText = proposalMergedEvent.length > 0 ? `Merged on block ${proposalMergedEvent[0].blockNumber}` : '';
   
           setProposalLog({
-            progress: [proposalCreatedText, proposalCancelledText, proposalExecutedText,
+            progress: [proposalCreatedText, proposalCancelledText, proposalExecutedText, ...proposalContribLodgedText,
               proposalVerifiedText, proposalMergedText], createdBy: txCreated.from
           });
         }
