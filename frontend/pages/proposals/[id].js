@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Contract, providers, utils } from 'ethers';
 
 import { useWeb3React } from '@web3-react/core';
@@ -94,7 +94,9 @@ function ProposalDetails(props) {
       }
     }
 
-    checkDAO(account);
+    useEffect(() => {
+      checkDAO(account);
+    }, [account]);
   }
 
   return (

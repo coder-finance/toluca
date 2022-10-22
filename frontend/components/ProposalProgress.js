@@ -70,7 +70,7 @@ const ProposalProgress = ({ proposal }) => {
       };
   
       ProposalRetrievalFn();
-    }, []);
+    }, [account]);
   }
 
   return (
