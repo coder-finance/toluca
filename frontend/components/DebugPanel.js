@@ -1,13 +1,42 @@
 import { useState } from 'react';
-import { Button, Text } from 'rebass';
+import { Box, Button, Text } from 'rebass';
+import { useForm } from 'react-hook-form';
+import {
+  Label,
+  Select
+} from '@rebass/forms';
+
+import { Contract, utils } from 'ethers';
 import { useWeb3React } from '@web3-react/core';
-import { injected } from '../connectors';
+import coderDAOAbi from '../abis/CoderDAO.json';
+import { daoAddress } from '../constants';
 
-export default function ({ proposal }) {
-  const { account } = useWeb3React();
+export default function ({ proposal, detectedContributions }) {
+  const {
+    register, handleSubmit, watch, formState: { errors }
+  } = useForm();
 
-  const onExecute = () => {
-    console.info('todo: onExecute')
+  const { account, chainId, library } = useWeb3React();
+
+  const onExecute = async (formData) => {
+    const lib = await library;
+    const coderDaoContract = new Contract(daoAddress[chainId], coderDAOAbi, lib.getSigner());
+
+    const ipfsHash = utils.id(proposal.hash);
+    const descriptionHash = utils.id(proposal.title);
+    const contribution = detectedContributions[formData.contributionId];
+  
+    // The Contract object
+    const response = await coderDaoContract.execute(
+      proposal.content.contract.targets,
+      proposal.content.contract.values,
+      [proposal.content.contract.transferCalldata],
+      descriptionHash,
+      ipfsHash,
+      contribution.args.lodger,
+      contribution.args.attemptNumber
+    );
+    return response;
   };
 
   const onVerify = () => {
@@ -24,20 +53,37 @@ export default function ({ proposal }) {
   return (
     <>
       <Text
-        fontSize={1}
+        fontSize={4}
         fontWeight="bold"
       >
+        Debug Panel
       </Text>
-      <Button
-        sx={{
-          fontSize: 1,
-          textTransform: 'uppercase',
-          borderRadius: 99999,
-        }}
-        onClick={onExecute}
+      <Box
+        as="form"
+        onSubmit={handleSubmit(onExecute)}
+        py={3}
       >
-        Execute
-      </Button>
+        {detectedContributions.length > 0 ? <>
+          <Label htmlFor="contributionId">Contribution ID</Label>
+          <Select
+            id="contributionId"
+            name="contributionId"
+            defaultValue="Contribution Id"
+            {...register('contributionId', { required: true })}
+          >
+            { detectedContributions.map((c, index) => (<option value={index}>{c.args.lodger}: {c.args.attemptNumber.toString()}</option>)) }
+          </Select>
+          <Button
+            sx={{
+              fontSize: 1,
+              textTransform: 'uppercase',
+              borderRadius: 99999,
+            }}
+          >
+            Execute
+          </Button>
+        </> : <>No contribution detected</>}
+      </Box>
       <Button
         sx={{
           fontSize: 1,
@@ -46,7 +92,7 @@ export default function ({ proposal }) {
         }}
         onClick={onVerify}
       >
-        Verify 
+        Verify
       </Button>
       <Button
         sx={{

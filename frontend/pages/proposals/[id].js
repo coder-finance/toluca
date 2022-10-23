@@ -106,7 +106,7 @@ function ProposalDetails(props) {
       <ProposalVoting proposal={props.proposal} />
       <ProposalContributionForm proposal={props.proposal} detectedContributions={detectedContributions} />
       <ProposalProgress proposal={props.proposal} />
-      <DebugPanel/>
+      <DebugPanel proposal={props.proposal} detectedContributions={detectedContributions}/>
     </>
   );
 }
