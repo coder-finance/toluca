@@ -40,13 +40,14 @@ const ProposalProgress = ({ proposal }) => {
   
           filters = await coderDao.filters.ProposalCanceled();
           const logsCanceled = await coderDao.queryFilter(filters, 0, 'latest');
-          const proposalCancelledEvent = logsCanceled.filter(e => e.args[0].toHexString() === proposal.id).map(e => `Canceled on block #${e}`);
+          const proposalCancelledEvent = logsCanceled.filter(e => e.args[0].toHexString() === proposal.id);
           console.error('proposalcanceled', proposal.id, proposalCancelledEvent);
           const proposalCancelledText = proposalCancelledEvent.length > 0 ? `Cancelled on block ${proposalCancelledEvent[0].blockNumber}` : '';
   
           filters = await coderDao.filters.ProposalExecuted();
           const logsExecuted = await coderDao.queryFilter(filters, 0, 'latest');
-          const proposalExecutedEvent = logsExecuted.filter(e => e.args[0].toHexString() === proposal.id).map(e => `Executed on block #${e}`);;
+          console.error(9999, logsExecuted)
+          const proposalExecutedEvent = logsExecuted.filter(e => e.args[0].toHexString() === proposal.id);
           console.error('proposalexecuted', proposal.id, proposalExecutedEvent);
           const proposalExecutedText = proposalExecutedEvent.length > 0 ? `Executed on block ${proposalExecutedEvent[0].blockNumber}` : '';
 
@@ -59,13 +60,13 @@ const ProposalProgress = ({ proposal }) => {
 
           filters = await coderDao.filters.ProposalVerified();
           const logsVerified = await coderDao.queryFilter(filters, 0, 'latest');
-          const proposalVerifiedEvent = logsVerified.filter(e => e.args[0].toHexString() === proposal.id).map(e => `Verified on block #${e}`);;
+          const proposalVerifiedEvent = logsVerified.filter(e => e.args[0].toHexString() === proposal.id);
           console.error('proposalverified', proposal.id, proposalVerifiedEvent);
           const proposalVerifiedText = proposalVerifiedEvent.length > 0 ? `Verified on block ${proposalVerifiedEvent[0].blockNumber}` : '';
   
           filters = await coderDao.filters.ProposalMerged();
           const logsMerged = await coderDao.queryFilter(filters, 0, 'latest');
-          const proposalMergedEvent = logsMerged.filter(e => e.args[0].toHexString() === proposal.id).map(e => `Merged on block #${e}`);;
+          const proposalMergedEvent = logsMerged.filter(e => e.args[0].toHexString() === proposal.id);
           console.error('proposalmerged', proposal.id, proposalMergedEvent);
           const proposalMergedText = proposalMergedEvent.length > 0 ? `Merged on block ${proposalMergedEvent[0].blockNumber}` : '';
   
