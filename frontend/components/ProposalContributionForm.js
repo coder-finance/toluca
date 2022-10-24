@@ -102,7 +102,7 @@ export default function ({ proposal, detectedContributions }) {
         {detectedContributions.length > 0 && 
           <Box>Contribution detected, attempted times: {detectedContributions.length}</Box>
         }
-        { !canContribute && <Box
+        { canContribute && <Box
           as="form"
           onSubmit={handleSubmit(onSubmit)}
           py={3}
