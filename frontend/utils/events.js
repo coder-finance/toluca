@@ -28,8 +28,10 @@ module.exports.GetEvent = GetEvent;
 const GetProposalEvents = async (proposal, connection, coderDaoContract) => {
     const logToEvent = (log) => {
         const blockNumber = log.blockNumber
+        const isValid = !log.removed
         log = coderDaoContract.interface.parseLog(log);
         log.blockNumber = BigNumber.from(blockNumber)
+        log.isValid = isValid
         return log
     }
     const buildActiveEvent = (logs) => {
@@ -63,7 +65,7 @@ const GetProposalEvents = async (proposal, connection, coderDaoContract) => {
         ]
     }]);
     logs = logs.map(logToEvent);
-    logs = logs.filter(x => x.args[0].toHexString() === proposal.id);
+    logs = logs.filter(x => x.args[0].toHexString() === proposal.id && x.isValid);
     logs.push(buildActiveEvent(logs))
     logs.sort((a, b) => a.blockNumber.sub(b.blockNumber).toString())
     console.log("GetProposalEvents", logs, proposal)
