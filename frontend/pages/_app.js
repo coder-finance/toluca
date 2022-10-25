@@ -5,7 +5,8 @@ import {
   Heading, Text, Link, Flex, Box
 } from 'rebass';
 import { ThemeProvider } from 'emotion-theming';
-import theme from '@rebass/preset';
+// import theme from '@rebass/preset';
+import theme from './_theme'
 import { useEagerConnect } from '../contexts';
 
 import './App.css';

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useWeb3React } from '@web3-react/core';
 import {
-  Box, Card,
+  Box, Card, Flex,
   Heading,
   Button
 } from 'rebass';
@@ -25,6 +25,7 @@ export default function ({ proposal }) {
     register, handleSubmit, formState: { errors }
   } = useForm();
 
+  const [votingHistory, setVotingHistory] = useState();
   const [votingState, setVotingState] = useState();
   const [votingPower, setVotingPower] = useState();
 
@@ -56,6 +57,17 @@ export default function ({ proposal }) {
 
     const filters = await coderDaoContract.filters.VoteCast();
     const logs = await coderDaoContract.queryFilter(filters, 0, 'latest');
+
+    // TODO Switch to raw, because blockNumber is absent. See proposal history.
+    /* 
+    LogDescription
+    args: 
+    (5) ['0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', BigNumber, 1, BigNumber, '', voter: '0x1D5c57053e306D97B3CA014Ca1deBd2882b325eD', proposalId: BigNumber, support: 1, weight: BigNumber, reason: '']
+    eventFragment: {name: 'VoteCast', anonymous: false, inputs: Array(5), type: 'event', _isFragment: true}
+    name: "VoteCast"
+    signature: "VoteCast(address,uint256,uint8,uint256,string)"
+    topic: "0xb8e138887d0aa13bab447e82de9d5c1777041ecd21ca36ba824ff1e6c07ddda4"
+    */
     const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
 
     let votes = events.filter(event => event.args.proposalId.eq(proposalIdFromPartsU256));
@@ -67,6 +79,8 @@ export default function ({ proposal }) {
         weight: x.args.weight.toString(),
       })
     });
+    setVotingHistory(votes)
+
     let votingState = votes.filter(vote => vote.voter == account);
     if (votingState) {
       votingState = votingState[0]
@@ -110,6 +124,23 @@ export default function ({ proposal }) {
         </Box></Card>
       )
     }
+  };
+
+  const VotingHistory = (props) => {
+    if (!props.votingHistory) {
+      return (
+        <></>
+      )
+    }
+    let rows = props.votingHistory.map(vote => <Flex>
+      <Box variant="voting.history.voter">{vote.voter}</Box>
+      <Box variant="voting.history.vote">{voteStringFromInt(vote.vote)}</Box>
+      <Box>{vote.weight}</Box>
+    </Flex>)
+    return <Box variant="voting.history">
+      <Heading>Votes</Heading>
+      {rows}
+    </Box>
   };
 
   const VotingForm = (props) => {
@@ -160,6 +191,7 @@ export default function ({ proposal }) {
     <>
       <VotingState votingState={votingState} proposal={proposal} />
       <VotingForm votingState={votingState} votingPower={votingPower} proposal={proposal} />
+      <VotingHistory votingState={votingState} votingHistory={votingHistory} proposal={proposal} />
     </>
 
   )

@@ -101,12 +101,11 @@ function ProposalDetails(props) {
 
   return (
     <>
-      {voted && <ProposalVoteStatus />}
       <Proposal proposal={props.proposal} />
       <ProposalVoting proposal={props.proposal} />
       <ProposalContributionForm proposal={props.proposal} detectedContributions={detectedContributions} />
       <ProposalProgress proposal={props.proposal} />
-      <DebugPanel proposal={props.proposal} detectedContributions={detectedContributions}/>
+      <DebugPanel proposal={props.proposal} detectedContributions={detectedContributions} />
     </>
   );
 }
