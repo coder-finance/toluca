@@ -26,7 +26,6 @@ export default function ({ proposal, detectedContributions }) {
     const descriptionHash = utils.id(proposal.title);
     const contribution = detectedContributions[formData.contributionId];
   
-    // The Contract object
     const response = await coderDaoContract.execute(
       proposal.content.contract.targets,
       proposal.content.contract.values,
@@ -39,16 +38,64 @@ export default function ({ proposal, detectedContributions }) {
     return response;
   };
 
-  const onVerify = () => {
-    console.info('todo: onVerify')
+  const onVerify = async (formData) => {
+    const lib = await library;
+    const coderDaoContract = new Contract(daoAddress[chainId], coderDAOAbi, lib.getSigner());
+
+    const ipfsHash = utils.id(proposal.hash);
+    const descriptionHash = utils.id(proposal.title);
+    const contribution = detectedContributions[0];
+  
+    const response = await coderDaoContract.verify(
+      proposal.content.contract.targets,
+      proposal.content.contract.values,
+      [proposal.content.contract.transferCalldata],
+      descriptionHash,
+      ipfsHash,
+      contribution.args.lodger,
+      contribution.args.attemptNumber
+    );
+    return response;
   };
 
-  const onConfirm = () => {
-    console.info('todo: onConfirm')
+  const onConfirm = async () => {
+    const lib = await library;
+    const coderDaoContract = new Contract(daoAddress[chainId], coderDAOAbi, lib.getSigner());
+
+    const ipfsHash = utils.id(proposal.hash);
+    const descriptionHash = utils.id(proposal.title);
+    const contribution = detectedContributions[0];
+  
+    const response = await coderDaoContract.confirmMerge(
+      proposal.content.contract.targets,
+      proposal.content.contract.values,
+      [proposal.content.contract.transferCalldata],
+      descriptionHash,
+      ipfsHash,
+      contribution.args.lodger,
+      contribution.args.attemptNumber
+    );
+
+    return response;
   };
 
   // TODO: refactor
   if (account !== '0xce1B9e1900108Cb779699319B1E37897d1E65c2B') return null;
+
+  const canExecute = proposal.state === 4 || proposal.state === 5;
+  const canVerify = proposal.state === 7;
+
+  const canConfirm = proposal.state === 8;
+  const allDone = proposal.state === 9;
+
+
+  if (allDone) 
+    return <Text
+      fontSize={3}
+      fontWeight="bold"
+    >
+      Proposal confirmed merged! No debug panel needed
+    </Text>
 
   return (
     <>
@@ -73,7 +120,7 @@ export default function ({ proposal, detectedContributions }) {
           >
             { detectedContributions.map((c, index) => (<option value={index}>{c.args.lodger}: {c.args.attemptNumber.toString()}</option>)) }
           </Select>
-          <Button
+          {canExecute && <Button
             sx={{
               fontSize: 1,
               textTransform: 'uppercase',
@@ -81,10 +128,10 @@ export default function ({ proposal, detectedContributions }) {
             }}
           >
             Execute
-          </Button>
+          </Button>}
         </> : <>No contribution detected</>}
       </Box>
-      <Button
+      {canVerify && <Button
         sx={{
           fontSize: 1,
           textTransform: 'uppercase',
@@ -93,8 +140,8 @@ export default function ({ proposal, detectedContributions }) {
         onClick={onVerify}
       >
         Verify
-      </Button>
-      <Button
+      </Button>}
+      {canConfirm && <Button
         sx={{
           fontSize: 1,
           textTransform: 'uppercase',
@@ -103,6 +150,6 @@ export default function ({ proposal, detectedContributions }) {
         onClick={onConfirm}
       >
         Confirm Merge
-      </Button>
+      </Button>}
     </>);
 }

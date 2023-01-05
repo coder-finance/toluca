@@ -44,7 +44,16 @@ export async function getServerSideProps({ params, query }) {
     const snapshot = await coderDao.proposalSnapshot(proposalBase.id);
     const deadline = await coderDao.proposalDeadline(proposalBase.id);
 
-    const res = await fetch(`${ipfs.httpGateway}${proposalBase.hash}`);
+    let res;
+
+    try {
+      // TODO: fix this properly
+      res = await fetch(`${ipfs.httpGateway}${proposalBase.hash}`);
+    } catch (e) {
+      console.error(`Cannot connect to IPFS Gateway at ${ipfs.httpGateway}. Is it on? Error: ${e}`);
+      throw `Cannot connect to IPFS Gateway at ${ipfs.httpGateway}. Is it on? Error: ${e}`;
+    }
+
     const content = await res.json();
 
     const proposal = {
@@ -86,8 +95,8 @@ function ProposalDetails(props) {
         const filters = await coderDao.filters.ProposalContributionLodged();
         const logs = await coderDao.queryFilter(filters, 0, 'latest');
         const events = logs.map((log) => coderDao.interface.parseLog(log))
-          .filter((e) => e.args.proposalId.toHexString() === props.proposal.id
-            && e.args.lodger === account);
+          .filter((e) => e.args.proposalId.toHexString() === props.proposal.id);
+            // && e.args.lodger === account); TODO: we dont need to be the lodger as admin in debugpanel, use this logic when proper frontend
 
         events.length > 0 && setDetectedContributions(events);
         console.error('lastAttemptNumber', events.length);
