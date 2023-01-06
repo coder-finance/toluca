@@ -30,7 +30,7 @@ export default function ({ proposal }) {
   const ProposalHead = ({ proposal }) => {
     return (<>
       <Heading as="h3">
-        {proposal.title} aaa
+        {proposal.title}
       </Heading>
 
       <Flex variant="proposal.meta">
