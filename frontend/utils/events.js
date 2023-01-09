@@ -34,6 +34,7 @@ const GetProposalEvents = async (proposal, connection, coderDaoContract) => {
         log.isValid = isValid
         return log
     }
+
     const buildActiveEvent = (logs) => {
         let logCreated = logs.find(log => log.name === "ProposalCreated")
         if (logCreated) {
@@ -46,6 +47,32 @@ const GetProposalEvents = async (proposal, connection, coderDaoContract) => {
         }
         return;
     }
+
+    const buildSucceededEvent = async (logs, proposalId, coderDao) => {
+        let logCreated = logs.find(log => log.name === "ProposalCreated")
+        let logCanceled = logs.find(log => log.name === "ProposalCanceled")
+        if (logCanceled) {
+            return;
+        }
+
+        if (logCreated) {
+            const deadline = await coderDao.proposalDeadline(proposalId);
+            const state = await coderDao.state(proposal.id);
+            if (state >= 4) { // Succeeded
+                return {
+                    "blockNumber": logCreated.args.endBlock,
+                    "name": "ProposalSucceeded",
+                }
+            } else if (state === 3) { // Defeated
+                return {
+                    "blockNumber": logCreated.args.endBlock,
+                    "name": "ProposalDefeated",
+                }
+            }
+        }
+        return;
+    }
+
 
     let logs = await connection.send('eth_getLogs', [{
         address: [
@@ -66,7 +93,18 @@ const GetProposalEvents = async (proposal, connection, coderDaoContract) => {
     }]);
     logs = logs.map(logToEvent);
     logs = logs.filter(x => x.args[0].toHexString() === proposal.id && x.isValid);
-    logs.push(buildActiveEvent(logs))
+
+    let proposalActiveEvent = buildActiveEvent(logs);
+    if (proposalActiveEvent) {
+        logs.push(proposalActiveEvent)
+    }
+
+    let proposalSucceededEvent = await buildSucceededEvent(logs, proposal.id, coderDaoContract);
+    if (proposalSucceededEvent) {
+        logs.push(proposalSucceededEvent)
+    }
+    console.log(103, logs)
+
     logs.sort((a, b) => a.blockNumber.sub(b.blockNumber).toString())
     console.log("GetProposalEvents", logs, proposal)
     return logs
