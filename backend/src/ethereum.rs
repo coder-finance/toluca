@@ -361,7 +361,8 @@ pub async fn poll_ethereum(config: &Config) -> web3::Result<()>{
     println!("Listening from block #{}", block_num);
 
     // Read the PEM file.
-    let key = fs::read(priv_key_path)?;
+    let key = fs::read(priv_key_path)
+        .unwrap_or_else(|_| panic!("Private key not found at path: {}", priv_key_path.to_string_lossy()));
     let key = nom_pem::decode_block(&key).unwrap();
     let pool = ClientPool::new(
         api.to_string(),
