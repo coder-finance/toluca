@@ -82,11 +82,7 @@ export default function ({ proposal }) {
     setVotingHistory(votes)
 
     let votingState = votes.filter(vote => vote.voter == account);
-    if (votingState) {
-      votingState = votingState[0]
-    } else {
-      votingState = {}
-    }
+    votingState = votingState[0]
     setVotingState(votingState)
 
     const votingPower = await tokenContract.getVotes(lib.getSigner().getAddress());
@@ -144,7 +140,7 @@ export default function ({ proposal }) {
   };
 
   const VotingForm = (props) => {
-    if (props.votingState || props.proposal.state !== "1") {
+    if (props.votingState || props.proposal.state !== 1) {
       return (<></>)
     }
 
