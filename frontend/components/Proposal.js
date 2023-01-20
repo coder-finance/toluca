@@ -2,14 +2,19 @@ import { useState, useEffect } from 'react';
 import { BigNumber, Contract, providers, utils } from 'ethers';
 import { useForm } from 'react-hook-form';
 import {
+  Badge,
   Box,
-  Card,
+  Flex,
   Heading,
-  Text
-} from 'rebass';
-import { Flex, Box as FlexBox } from 'reflexbox';
+  Link,
+  Stack,
+  Stat,
+  StatLabel,
+  StatHelpText,
+} from '@chakra-ui/react';
+import TimelineRow from "../components/TimelineRow"
+
 import { useWeb3React } from '@web3-react/core';
-import ReactMarkdown from 'react-markdown';
 
 import { ipfs, daoAddress, daoTokenAddress, targetNetworkId } from '../constants';
 import coderDAOAbi from '../abis/CoderDAO.json';
@@ -28,23 +33,23 @@ export default function ({ proposal }) {
   } = useForm();
 
   const ProposalHead = ({ proposal }) => {
-    return (<>
-      <Heading as="h3">
-        {proposal.title}
+    return (<Stack mt='6' spacing='3'>
+      <Heading size='md' as='h3'>
+        <Link href={`/proposals/${proposal.id}?chainId=${chainId}`}>
+          {proposal.title}
+        </Link>
       </Heading>
 
-      <Flex variant="proposal.meta">
-        <Box>
-          <Box variant='badge'>
-            {proposalStatus(parseInt(proposal.state))}
-          </Box>
-        </Box>
-        <Box>
-          <strong>ID:</strong> {proposal.id} <br />
-          <strong>CID:</strong> <a href={`${ipfs.httpGateway}${proposal.hash}`}>{proposal.hash}</a>
-        </Box>
-      </Flex>
-    </>
+      <Badge>
+        {proposalStatus(parseInt(proposal.state))}
+      </Badge>
+      <Stat>
+        <StatLabel>ID</StatLabel>
+        <StatHelpText>{proposal.id}</StatHelpText>
+        <StatLabel>ipfs ID</StatLabel>
+        <StatHelpText><a href={`${ipfs.httpGateway}${proposal.hash}`}>{proposal.hash}</a></StatHelpText>
+      </Stat>
+    </Stack >
     )
   }
 
@@ -69,6 +74,50 @@ export default function ({ proposal }) {
   }
 
 
+  const ProposalVotingTimeline = ({ proposal }) => {
+    console.log(101, proposal);
+
+    if (!proposal.votes) {
+      return
+    }
+    // const deadline = await coderDao.proposalDeadline(proposalId);
+    //     let logs = await connection.send('eth_getLogs', [{
+    //     address: [
+    //         coderDaoContract.address,
+    //     ],
+    //     fromBlock: "0x0",
+    //     topics: [
+    //         [ // topic[0]
+    //             coderDaoContract.filters.ProposalCreated().topics[0],
+    //             coderDaoContract.filters.ProposalExecuted().topics[0],
+    //             coderDaoContract.filters.ProposalCanceled().topics[0],
+    //             coderDaoContract.filters.ProposalQueued().topics[0],
+    //             coderDaoContract.filters.ProposalVerified().topics[0],
+    //             coderDaoContract.filters.ProposalMerged().topics[0],
+    //             coderDaoContract.filters.ProposalContributionLodged().topics[0],
+    //         ]
+    //     ]
+    // }]);
+
+    // let logCreated = logs.find(log => log.name === "ProposalCreated")
+    // if (logCreated) {
+    //   let logActive = {
+    //     "blockNumber": logCreated.args.startBlock,
+    //     "name": "ProposalActive",
+    //   }
+
+    //   return logActive
+    // }
+
+    return (
+      <div>
+
+      </div>
+    )
+  }
+
+
+
   // Only gets called when previewing (client-side)
   useEffect(() => {
     const ProposalRetrievalFn = async () => {
@@ -88,5 +137,6 @@ export default function ({ proposal }) {
   return <Box variant="proposal">
     <ProposalHead proposal={proposal} proposalState={proposalState} />
     <ProposalVotesSummary proposal={proposal} />
+    <ProposalVotingTimeline proposal={proposal} />
   </Box>;
 }

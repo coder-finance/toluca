@@ -1,8 +1,21 @@
 import { useState, useEffect } from 'react';
 import {
-  Box, Heading, Flex,
-} from 'rebass';
-import { Box as FlexBox } from 'reflexbox';
+  Badge,
+  Box,
+  Card,
+  CardHeader,
+  CardBody,
+  Flex,
+  Heading,
+  Link,
+  Stack,
+  Stat,
+  StatLabel,
+  StatHelpText,
+  Text
+} from '@chakra-ui/react';
+import TimelineRow from "../components/TimelineRow"
+
 import { Contract, providers } from 'ethers';
 import { useWeb3React } from '@web3-react/core';
 
@@ -36,16 +49,29 @@ const ProposalProgress = ({ proposal }) => {
 
   let rows = []
   if (proposalLog) {
-    rows = proposalLog.map(log => <Flex>
-      <Box variant="proposal.history.blockNumber">{log.blockNumber.toString()}</Box>
-      <Box variant="proposal.history.name">{log.name}</Box>
-    </Flex>)
+    rows = proposalLog.map((log, index, arr) => <TimelineRow
+      title={log.name}
+      date={log.blockNumber.toString()}
+      index={index}
+      arrLength={arr.length}
+    />
+    )
   }
 
-  return <Box variant="proposal.history">
-    <Heading as='h3'>History</Heading>
-    {rows}
-  </Box>
+  return <Card p="1rem" maxHeight="100%">
+    <CardHeader pt="0px" p="28px 0px 35px 21px">
+      <Flex direction="column">
+        <Text fontSize="lg" fontWeight="bold" pb=".5rem">
+          History
+        </Text>
+      </Flex>
+    </CardHeader>
+    <CardBody ps="26px" pe="0px" mb="31px" position="relative">
+      <Flex direction="column">
+        {rows}
+      </Flex>
+    </CardBody>
+  </Card>
 };
 
 export default ProposalProgress;
