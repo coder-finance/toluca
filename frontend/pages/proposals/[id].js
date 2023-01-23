@@ -11,6 +11,7 @@ import ProposalProgress from '../../components/ProposalProgress';
 import DebugPanel from '../../components/DebugPanel';
 import { daoAddress, ipfs, targetNetworkId } from '../../constants';
 import coderDAOAbi from '../../abis/CoderDAO.json';
+import { ProposalFromLog } from '../../utils/proposal';
 
 const connection = new providers.InfuraProvider(targetNetworkId);
 
@@ -19,25 +20,13 @@ export async function getServerSideProps({ params, query }) {
   const ProposalRetrievalFn = async () => {
     // The Contract object
     // const { chainId } = useWeb3React();
+    // TODO
     const chainId = 5; // https://github.com/eth-clients/goerli
 
     const coderDao = new Contract(daoAddress[chainId], coderDAOAbi, connection);
     const filters = await coderDao.filters.ProposalCreated();
     const logs = await coderDao.queryFilter(filters, 0, 'latest');
-    const events = logs.map((log) => coderDao.interface.parseLog(log));
-
-    const proposals = events.map((e) => {
-      const title = e.args.description;
-      const hash = e.args.ipfsCid;
-
-      return ({
-        id: e.args.proposalId.toHexString(),
-        description: e.args.description,
-        title,
-        hash,
-      })
-    }).filter((e) => e.id === params.id);
-
+    const proposals = logs.map((log) => ProposalFromLog(coderDao, log)).filter((p) => p.id === params.id);
     const proposalBase = proposals[0];
     const state = await coderDao.state(proposalBase.id);
     const votes = await coderDao.proposalVotes(proposalBase.id);
@@ -96,7 +85,7 @@ function ProposalDetails(props) {
         const logs = await coderDao.queryFilter(filters, 0, 'latest');
         const events = logs.map((log) => coderDao.interface.parseLog(log))
           .filter((e) => e.args.proposalId.toHexString() === props.proposal.id);
-            // && e.args.lodger === account); TODO: we dont need to be the lodger as admin in debugpanel, use this logic when proper frontend
+        // && e.args.lodger === account); TODO: we dont need to be the lodger as admin in debugpanel, use this logic when proper frontend
 
         events.length > 0 && setDetectedContributions(events);
         console.error('lastAttemptNumber', events.length);

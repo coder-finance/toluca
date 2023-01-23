@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { BigNumber, Contract, providers, utils } from 'ethers';
 import { useForm } from 'react-hook-form';
 import {
+  Card,
+  CardBody,
   Badge,
   Box,
   Flex,
@@ -11,7 +13,11 @@ import {
   Stat,
   StatLabel,
   StatHelpText,
+  Text
 } from '@chakra-ui/react';
+
+import MiddleEllipsis from "react-middle-ellipsis";
+
 import TimelineRow from "../components/TimelineRow"
 
 import { useWeb3React } from '@web3-react/core';
@@ -28,95 +34,6 @@ const connection = new providers.InfuraProvider(targetNetworkId);
 export default function ({ proposal }) {
   const [proposalState, setProposalState] = useState();
   const { account, chainId, library } = useWeb3React();
-  const {
-    register, handleSubmit, watch, formState: { errors }
-  } = useForm();
-
-  const ProposalHead = ({ proposal }) => {
-    return (<Stack mt='6' spacing='3'>
-      <Heading size='md' as='h3'>
-        <Link href={`/proposals/${proposal.id}?chainId=${chainId}`}>
-          {proposal.title}
-        </Link>
-      </Heading>
-
-      <Badge>
-        {proposalStatus(parseInt(proposal.state))}
-      </Badge>
-      <Stat>
-        <StatLabel>ID</StatLabel>
-        <StatHelpText>{proposal.id}</StatHelpText>
-        <StatLabel>ipfs ID</StatLabel>
-        <StatHelpText><a href={`${ipfs.httpGateway}${proposal.hash}`}>{proposal.hash}</a></StatHelpText>
-      </Stat>
-    </Stack >
-    )
-  }
-
-  const ProposalVotesSummary = ({ proposal }) => {
-    if (!proposal.votes) {
-      return
-    }
-
-    return (
-      <Flex variant="proposal.votes">
-        <Box variant='proposal.votes.for'>
-          ✅ For: <span>{proposal.votes.for}</span>
-        </Box>
-        <Box variant='proposal.votes.against'>
-          🚫 Against: <span>{proposal.votes.against}</span>
-        </Box>
-        <Box variant='proposal.votes.abstain'>
-          ⭕️ Abstain: <span>{proposal.votes.abstain}</span>
-        </Box>
-      </Flex>
-    )
-  }
-
-
-  const ProposalVotingTimeline = ({ proposal }) => {
-    console.log(101, proposal);
-
-    if (!proposal.votes) {
-      return
-    }
-    // const deadline = await coderDao.proposalDeadline(proposalId);
-    //     let logs = await connection.send('eth_getLogs', [{
-    //     address: [
-    //         coderDaoContract.address,
-    //     ],
-    //     fromBlock: "0x0",
-    //     topics: [
-    //         [ // topic[0]
-    //             coderDaoContract.filters.ProposalCreated().topics[0],
-    //             coderDaoContract.filters.ProposalExecuted().topics[0],
-    //             coderDaoContract.filters.ProposalCanceled().topics[0],
-    //             coderDaoContract.filters.ProposalQueued().topics[0],
-    //             coderDaoContract.filters.ProposalVerified().topics[0],
-    //             coderDaoContract.filters.ProposalMerged().topics[0],
-    //             coderDaoContract.filters.ProposalContributionLodged().topics[0],
-    //         ]
-    //     ]
-    // }]);
-
-    // let logCreated = logs.find(log => log.name === "ProposalCreated")
-    // if (logCreated) {
-    //   let logActive = {
-    //     "blockNumber": logCreated.args.startBlock,
-    //     "name": "ProposalActive",
-    //   }
-
-    //   return logActive
-    // }
-
-    return (
-      <div>
-
-      </div>
-    )
-  }
-
-
 
   // Only gets called when previewing (client-side)
   useEffect(() => {
@@ -134,9 +51,33 @@ export default function ({ proposal }) {
 
   if (!proposal) return (<>Loading...</>);
 
-  return <Box variant="proposal">
-    <ProposalHead proposal={proposal} proposalState={proposalState} />
-    <ProposalVotesSummary proposal={proposal} />
-    <ProposalVotingTimeline proposal={proposal} />
-  </Box>;
+  return <Card maxW='lg'>
+    <CardBody>
+      <Stack spacing='3'>
+        <Heading size='md' as='h3'>
+          <Link href={`/proposals/${proposal.id}?chainId=${chainId}`}>
+            {proposal.title}
+          </Link>
+          <Badge variant="solid" direction='row' ml='1'>
+            {proposalStatus(parseInt(proposalState))}
+          </Badge>
+
+        </Heading>
+
+        <Stat>
+          <StatLabel>ID</StatLabel>
+          <StatHelpText>
+            <Link href={`https://${targetNetworkId}.etherscan.io/tx/${proposal.transactionHash}`} title={proposal.id}>
+              <div style={{ whiteSpace: "nowrap" }}>
+                <MiddleEllipsis><span>{proposal.id}</span></MiddleEllipsis>
+              </div></Link>
+          </StatHelpText>
+          <StatLabel>IPFS ID</StatLabel>
+          <StatHelpText><a href={`${ipfs.httpGateway}${proposal.hash}`}>{proposal.hash}</a></StatHelpText>
+          <StatLabel>Proposer</StatLabel>
+          <StatHelpText><a href={`https://${targetNetworkId}.etherscan.io/address/${proposal.proposer}`}>{proposal.proposer}</a></StatHelpText>
+        </Stat>
+      </Stack >
+    </CardBody>
+  </Card>
 }

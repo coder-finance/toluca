@@ -7,6 +7,7 @@ import { Contract } from 'ethers';
 import Proposal from './Proposal';
 import { daoAddress } from '../constants';
 import coderDAOAbi from '../abis/CoderDAO.json';
+import { ProposalFromLog } from '../utils/proposal';
 
 function HomeGallery(props) {
   const { account, chainId, library } = useWeb3React();
@@ -21,19 +22,7 @@ function HomeGallery(props) {
     const coderDaoContract = new Contract(daoAddress[chainId], coderDAOAbi, lib.getSigner());
     const filters = await coderDaoContract.filters.ProposalCreated();
     const logs = await coderDaoContract.queryFilter(filters, 0, 'latest');
-    const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
-
-    const proposals = events.map((e) => {
-      const title = e.args.description;
-      const hash = e.args.ipfsCid;
-
-      return ({
-        id: e.args.proposalId.toHexString(),
-        description: e.args.description,
-        title,
-        hash,
-      })
-    });
+    const proposals = logs.map((log) => ProposalFromLog(coderDaoContract, log));
 
     // latest state of proposal
     setProposals(proposals);
@@ -47,11 +36,7 @@ function HomeGallery(props) {
     <SimpleGrid columns={2} spacing={10}>
       {proposals
         && proposals.map((proposal, i) => (
-          <Card maxW='lg'>
-            <CardBody>
-              <Proposal proposal={proposal} previewOnly />
-            </CardBody>
-          </Card>
+          <Proposal proposal={proposal} />
         ))}
     </SimpleGrid>
   );
