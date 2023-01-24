@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box } from "rebass";
+import { Tag } from '@chakra-ui/react'
 import { useWeb3React } from '@web3-react/core'
 
 import { checkChainSupported, supportedChains } from '../../utils';
@@ -7,15 +7,7 @@ import { checkChainSupported, supportedChains } from '../../utils';
 export default () => {
   const { account, chainId } = useWeb3React()
 
-  return (account ? <Box
-    sx={{
-      display: 'inline-block',
-      color: 'white',
-      bg: checkChainSupported(chainId) ? 'primary' : 'red',
-      px: 20,
-      py: 1,
-      borderRadius: 10,
-    }} style={{ marginRight: '8px' }}>
+  return (account ? <Tag colorScheme='blue' size='lg'>
     {checkChainSupported(chainId) ? supportedChains[chainId] : 'Wrong Network'}
-  </Box> : null)
+  </Tag > : null)
 }

@@ -5,19 +5,13 @@ import { daoAddress, targetNetworkId } from '../constants';
 import { Contract, providers } from 'ethers';
 
 const GetEvent = async (proposal, eventFilter, coderDaoContract) => {
-
     let logs = await coderDaoContract.queryFilter(await eventFilter(), 0, 'latest')
     logs = logs.filter(x => x.args[0].toHexString() === proposal.id);
     if (logs.length == 0) {
         return;
     }
-
     const tx = await logs[0].getTransaction();
-
     const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
-
-    console.log(102, events);
-
     return {
         "name": logs[0].event,
         "blockNumber": logs[0].blockNumber,
@@ -56,7 +50,6 @@ const GetProposalEvents = async (proposal, connection, coderDaoContract) => {
         }
 
         if (logCreated) {
-            const deadline = await coderDao.proposalDeadline(proposalId);
             const state = await coderDao.state(proposal.id);
             if (state >= 4) { // Succeeded
                 return {

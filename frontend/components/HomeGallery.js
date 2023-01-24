@@ -1,16 +1,13 @@
 import { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  Link,
-} from 'rebass';
-import { Flex, Box as FlexBox } from 'reflexbox';
+
+import { Box, Card, CardBody, Link, SimpleGrid } from '@chakra-ui/react'
 import { useWeb3React } from '@web3-react/core';
 import { Contract } from 'ethers';
 
 import Proposal from './Proposal';
 import { daoAddress } from '../constants';
 import coderDAOAbi from '../abis/CoderDAO.json';
+import { ProposalFromLog } from '../utils/proposal';
 
 function HomeGallery(props) {
   const { account, chainId, library } = useWeb3React();
@@ -25,19 +22,7 @@ function HomeGallery(props) {
     const coderDaoContract = new Contract(daoAddress[chainId], coderDAOAbi, lib.getSigner());
     const filters = await coderDaoContract.filters.ProposalCreated();
     const logs = await coderDaoContract.queryFilter(filters, 0, 'latest');
-    const events = logs.map((log) => coderDaoContract.interface.parseLog(log));
-  
-    const proposals = events.map((e) => { 
-      const title = e.args.description;
-      const hash = e.args.ipfsCid;
-
-      return ({
-        id: e.args.proposalId.toHexString(),
-        description: e.args.description,
-        title,
-        hash,
-      })
-    });
+    const proposals = logs.map((log) => ProposalFromLog(coderDaoContract, log));
 
     // latest state of proposal
     setProposals(proposals);
@@ -48,26 +33,12 @@ function HomeGallery(props) {
   }, [account, chainId]);
 
   return (
-    <Flex flexWrap="wrap">
+    <SimpleGrid columns={2} spacing={10}>
       {proposals
         && proposals.map((proposal, i) => (
-          <FlexBox key={i} width={[1, 1 / 2]} p={3}>
-            <Link href={`/proposals/${proposal.id}?chainId=${chainId}`}>
-              <Box>
-                <Card
-                  sx={{
-                    p: 1,
-                    borderRadius: 2,
-                    boxShadow: '0 0 16px rgba(0, 0, 0, .25)',
-                  }}
-                >
-                  <Proposal proposal={proposal} previewOnly />
-                </Card>
-              </Box>
-            </Link>
-          </FlexBox>
+          <Proposal proposal={proposal} />
         ))}
-    </Flex>
+    </SimpleGrid>
   );
 }
 

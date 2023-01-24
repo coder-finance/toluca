@@ -1,8 +1,21 @@
 import { useState, useEffect } from 'react';
 import {
-  Box, Heading, Flex,
-} from 'rebass';
-import { Box as FlexBox } from 'reflexbox';
+  Badge,
+  Box,
+  Card,
+  CardHeader,
+  CardBody,
+  Flex,
+  Heading,
+  Link,
+  Stack,
+  Stat,
+  StatLabel,
+  StatHelpText,
+  Text
+} from '@chakra-ui/react';
+import TimelineRow from "./TimelineRow"
+
 import { Contract, providers } from 'ethers';
 import { useWeb3React } from '@web3-react/core';
 
@@ -12,7 +25,7 @@ import { GetEvent, GetProposalEvents } from '../utils/events'
 
 const connection = new providers.InfuraProvider(targetNetworkId);
 
-const ProposalProgress = ({ proposal }) => {
+const ProposalTimeline = ({ proposal }) => {
   const { account, chainId, library } = useWeb3React();
   const [proposalLog, setProposalLog] = useState();
 
@@ -36,16 +49,33 @@ const ProposalProgress = ({ proposal }) => {
 
   let rows = []
   if (proposalLog) {
-    rows = proposalLog.map(log => <Flex>
-      <Box variant="proposal.history.blockNumber">{log.blockNumber.toString()}</Box>
-      <Box variant="proposal.history.name">{log.name}</Box>
-    </Flex>)
+    rows = proposalLog.map((log, index, arr) => {
+      return (
+        <TimelineRow
+          title={log.name}
+          date={log.blockNumber.toString()}
+          color={'blue.300'}
+          index={index}
+          arrLength={arr.length}
+        />
+      )
+    })
   }
 
-  return <Box variant="proposal.history">
-    <Heading as='h3'>History</Heading>
-    {rows}
-  </Box>
+  return <Card p="1rem" maxHeight="100%" maxW={'sm'} m='5'>
+    <CardHeader pt="0px" p="28px 0px 35px 21px">
+      <Flex direction="column">
+        <Text fontSize="lg" fontWeight="bold" pb=".1rem">
+          Timeline
+        </Text>
+      </Flex>
+    </CardHeader>
+    <CardBody ps="26px" pe="0px" mb="31px" position="relative">
+      <Flex direction="column">
+        {rows}
+      </Flex>
+    </CardBody>
+  </Card>
 };
 
-export default ProposalProgress;
+export default ProposalTimeline;

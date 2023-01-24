@@ -2,10 +2,21 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useWeb3React } from '@web3-react/core';
 import {
-  Box, Card, Flex,
+  Card,
+  CardBody,
+  Badge,
+  Box,
+  Flex,
   Heading,
-  Button
-} from 'rebass';
+  Link,
+  Stack,
+  Stat,
+  StatGroup,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+} from '@chakra-ui/react';
+
 import {
   Label,
   Radio,
@@ -15,7 +26,7 @@ import { ipfs, daoAddress, daoTokenAddress, targetNetworkId } from '../constants
 import coderDAOAbi from '../abis/CoderDAO.json';
 import coderDAOTokenAbi from '../abis/CoderDAOToken.json';
 import { proposalStatus, genProposalId } from '../utils';
-import { voteIntFromLabel, voteStringFromInt } from '../utils/vote';
+import { voteIntFromLabel, voteStringFromInt, voteColorFromInt } from '../utils/vote';
 
 export default function ({ proposal }) {
 
@@ -102,7 +113,7 @@ export default function ({ proposal }) {
   const VotingState = (props) => {
     if (props.votingState) {
       return (
-        <Box p={3}>You voted <Box p={1} bg="green" display='inline-block'>{voteStringFromInt(props.votingState.vote)}</Box> with weight {props.votingState.weight}</Box>
+        <Box p={3}>You voted <Badge colorScheme={voteColorFromInt(props.votingState.vote)} variant='solid'>{voteStringFromInt(props.votingState.vote)}</Badge> with weight {props.votingState.weight}</Box>
       )
     }
     if (props.proposal.state != "1") {
@@ -184,11 +195,12 @@ export default function ({ proposal }) {
     )
   };
   return (
-    <>
-      <VotingState votingState={votingState} proposal={proposal} />
-      <VotingForm votingState={votingState} votingPower={votingPower} proposal={proposal} />
-      <VotingHistory votingState={votingState} votingHistory={votingHistory} proposal={proposal} />
-    </>
+    <Card maxW='lg' shadow='md' m='5' >
+      <CardBody>
+        <VotingState votingState={votingState} proposal={proposal} />
+        <VotingForm votingState={votingState} votingPower={votingPower} proposal={proposal} />
+      </CardBody>
+    </Card>
 
   )
 }

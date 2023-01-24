@@ -1,9 +1,6 @@
-import { Box, Button, Flex, Link, Heading } from "rebass";
+import { Box, Heading, Link, Button } from '@chakra-ui/react'
 import dynamic from "next/dynamic";
-import { useWeb3React } from '@web3-react/core'
-import { Contract, providers, utils } from 'ethers'
-import { proposalStub, daoAddress, daoTokenAddress } from "../constants";
-import coderDAOAbi from '../abis/CoderDAO.json'
+import { useRouter } from 'next/router'
 
 const DynamicHomeGallery = dynamic(() => import("../components/HomeGallery"), {
   ssr: false,
@@ -11,21 +8,12 @@ const DynamicHomeGallery = dynamic(() => import("../components/HomeGallery"), {
 });
 
 function HomePage(props) {
-  const { account, library } = useWeb3React()
-
+  const router = useRouter()
   return (
-    <Box p={3}>
-      <Flex>
-        <Box
-          p={3}
-        >
-          <Link href={`/proposals/propose`}><Button>Propose New</Button></Link>
-        </Box>
-      </Flex>
-      <Box>
-        <Heading as="h1" children="Proposal Gallery" mb={3} fontSize={[4, 5, 6]} />
-        <DynamicHomeGallery />
-      </Box>
+    <Box>
+      <Button p='5' colorScheme='pink' onClick={() => router.push('/proposals/propose')}>Propose New</Button>
+      <Heading as="h1" mt='5' mb='3'>Proposal Gallery</Heading>
+      <DynamicHomeGallery />
     </Box>
   );
 }

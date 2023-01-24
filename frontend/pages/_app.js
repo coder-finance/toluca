@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
+
+import {
+  ChakraProvider,
+  Container,
+  Flex,
+  Heading,
+  HStack,
+} from "@chakra-ui/react"
+
 import { Web3ReactProvider, useWeb3React } from '@web3-react/core';
 import { ethers } from 'ethers';
-import {
-  Heading, Text, Link, Flex, Box
-} from 'rebass';
 import { ThemeProvider } from 'emotion-theming';
 // import theme from '@rebass/preset';
 import theme from './_theme'
@@ -13,8 +19,10 @@ import './App.css';
 import { injected } from '../connectors';
 import Network from '../components/core/Network';
 import Connect from '../components/Connect';
+import ColorModeSwitcher from "../components/ColorModeSwitcher"
+import Logo from "../components/Logo"
+import NextChakraLink from "../components/NextChakraLink"
 
-let queryProvider;
 
 function App(props) {
   // try to eagerly connect to an injected provider, if it exists and has granted access already
@@ -50,49 +58,38 @@ function App(props) {
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <Box className="App">
-        <header className="App-header">
-          <Box
-            sx={{
-              display: 'grid',
-              gridGap: 4,
-              gridTemplateColumns: 'repeat(auto-fit, minmax(128px, 1fr))',
-            }}
+    <ChakraProvider>
+      <Container maxWidth="1200px">
+        <header>
+          <Flex
+            py={4}
+            justifyContent="space-between"
+            alignItems="center"
+            mb={8}
           >
-            <Box>
-              <Flex px={2} color="white" bg="black" alignItems="center">
-                <Link
-                  p={2}
-                  fontWeight="bold"
-                  href="/"
-                  sx={{
-                    fontWeight: '600',
-                    color: 'white',
-                    textDecoration: 'none',
-                  }}
-                >
-                  coder.finance
-                </Link>
-                <Box mx="auto" />
-
-                <Network />
-                <Connect />
-              </Flex>
-            </Box>
-            {/* {!account ?  : <Text
-              fontSize={[ 3, 4, 5 ]}
-              fontWeight='bold'
-              color='primary'>
-              {account}
-            </Text>} */}
-          </Box>
-          <Box>
-            {props.children}
-          </Box>
+            <Flex justifyContent="space-between" alignItems="center">
+              <nav>
+                <HStack spacing={12}>
+                  <NextChakraLink
+                    href="/"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Logo h="1.5rem" pointerEvents="none" mr={4} />
+                    <Heading size="lg">coder.finance</Heading>
+                  </NextChakraLink>
+                </HStack>
+              </nav>
+            </Flex>
+            <Network />
+            <Connect />
+            <ColorModeSwitcher justifySelf="flex-end" />
+          </Flex>
         </header>
-      </Box>
-    </ThemeProvider>
+        {props.children}
+      </Container>
+    </ChakraProvider>
   );
 }
 

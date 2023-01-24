@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Text } from 'rebass';
+import { Tag, Button } from '@chakra-ui/react'
 import { useWeb3React } from '@web3-react/core';
 import { injected } from '../connectors';
 
@@ -25,13 +25,9 @@ export default function (props) {
   };
 
   return account ? (
-    <Text
-      fontSize={1}
-      fontWeight="bold"
-      color="white"
-    >
+    <Tag size='lg' colorScheme='purple' variant='outline'>
       {account}
-    </Text>
+    </Tag>
   ) : (
     <Button
       {...props}
