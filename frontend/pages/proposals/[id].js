@@ -1,13 +1,31 @@
 import { useEffect, useState } from 'react';
 import { Contract, providers, utils } from 'ethers';
-
 import { useWeb3React } from '@web3-react/core';
 
+import {
+  Card,
+  CardBody,
+  Badge,
+  Box,
+  Flex,
+  Heading,
+  Link,
+  SimpleGrid,
+  Stack,
+  Stat,
+  StatGroup,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+} from '@chakra-ui/react';
+
+
 import Proposal from '../../components/Proposal'
-import ProposalVoteStatus from '../../components/ProposalVoteStatus';
+import ProposalVotingSummary from '../../components/ProposalVotingSummary';
 import ProposalVoting from '../../components/ProposalVoting';
+import VotingHistory from '../../components/VotingHistory';
 import ProposalContributionForm from '../../components/ProposalContributionForm';
-import ProposalProgress from '../../components/ProposalProgress';
+import ProposalTimeline from '../../components/ProposalTimeline';
 import DebugPanel from '../../components/DebugPanel';
 import { daoAddress, ipfs, targetNetworkId } from '../../constants';
 import coderDAOAbi from '../../abis/CoderDAO.json';
@@ -100,9 +118,11 @@ function ProposalDetails(props) {
   return (
     <>
       <Proposal proposal={props.proposal} />
+      <ProposalVotingSummary proposal={props.proposal} />
       <ProposalVoting proposal={props.proposal} />
+      <VotingHistory proposal={props.proposal} />
       <ProposalContributionForm proposal={props.proposal} detectedContributions={detectedContributions} />
-      <ProposalProgress proposal={props.proposal} />
+      <ProposalTimeline proposal={props.proposal} />
       <DebugPanel proposal={props.proposal} detectedContributions={detectedContributions} />
     </>
   );

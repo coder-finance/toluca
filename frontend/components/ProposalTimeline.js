@@ -14,7 +14,7 @@ import {
   StatHelpText,
   Text
 } from '@chakra-ui/react';
-import TimelineRow from "../components/TimelineRow"
+import TimelineRow from "./TimelineRow"
 
 import { Contract, providers } from 'ethers';
 import { useWeb3React } from '@web3-react/core';
@@ -25,7 +25,7 @@ import { GetEvent, GetProposalEvents } from '../utils/events'
 
 const connection = new providers.InfuraProvider(targetNetworkId);
 
-const ProposalProgress = ({ proposal }) => {
+const ProposalTimeline = ({ proposal }) => {
   const { account, chainId, library } = useWeb3React();
   const [proposalLog, setProposalLog] = useState();
 
@@ -49,20 +49,24 @@ const ProposalProgress = ({ proposal }) => {
 
   let rows = []
   if (proposalLog) {
-    rows = proposalLog.map((log, index, arr) => <TimelineRow
-      title={log.name}
-      date={log.blockNumber.toString()}
-      index={index}
-      arrLength={arr.length}
-    />
-    )
+    rows = proposalLog.map((log, index, arr) => {
+      return (
+        <TimelineRow
+          title={log.name}
+          date={log.blockNumber.toString()}
+          color={'blue.300'}
+          index={index}
+          arrLength={arr.length}
+        />
+      )
+    })
   }
 
-  return <Card p="1rem" maxHeight="100%">
+  return <Card p="1rem" maxHeight="100%" maxW={'sm'} m='5'>
     <CardHeader pt="0px" p="28px 0px 35px 21px">
       <Flex direction="column">
-        <Text fontSize="lg" fontWeight="bold" pb=".5rem">
-          History
+        <Text fontSize="lg" fontWeight="bold" pb=".1rem">
+          Timeline
         </Text>
       </Flex>
     </CardHeader>
@@ -74,4 +78,4 @@ const ProposalProgress = ({ proposal }) => {
   </Card>
 };
 
-export default ProposalProgress;
+export default ProposalTimeline;

@@ -35,3 +35,22 @@ const voteIntFromLabel = (voteLabel) => {
     return voteValueInt
 }
 exports.voteIntFromLabel = voteIntFromLabel;
+
+const voteColorFromInt = (voteInt) => {
+    let voteValueString = "gray";
+    switch (voteInt) {
+        case 1:
+            voteValueString = "green";
+            break;
+        case 0:
+            voteValueString = "red";
+            break;
+        case 2:
+            voteValueString = "gray";
+            break;
+        default:
+            console.error("Invalid voteInt", voteInt)
+    }
+    return voteValueString
+}
+exports.voteColorFromInt = voteColorFromInt;

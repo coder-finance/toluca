@@ -137,7 +137,6 @@ export default function ({ proposal }) {
 
   return <Box maxW='sm' borderWidth='1px' borderRadius='lg' overflow='hidden'>
     <ProposalHead proposal={proposal} proposalState={proposalState} />
-    <ProposalVotesSummary proposal={proposal} />
     <ProposalVotingTimeline proposal={proposal} />
   </Box>;
 }

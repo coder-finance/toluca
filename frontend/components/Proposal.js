@@ -51,7 +51,7 @@ export default function ({ proposal }) {
 
   if (!proposal) return (<>Loading...</>);
 
-  return <Card maxW='lg'>
+  return <Card maxW='lg' shadow='md' m='5'>
     <CardBody>
       <Stack spacing='3'>
         <Heading size='md' as='h3'>
